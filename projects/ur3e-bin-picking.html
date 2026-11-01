@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UR3e Bin-Picking — Farah Ben Slimene</title>
+  <meta name="description" content="A ROS 2 bin-picking pipeline on a real UR3e: YOLOv11 instance segmentation, PCA grasp, hand-eye calibration and MoveIt 2.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../v2.css">
+  <link rel="stylesheet" href="../case.css">
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<canvas id="slam" aria-hidden="true"></canvas>
+<div class="bg-scrim" aria-hidden="true"></div>
+<button class="slam-hud" id="slam-toggle" title="Turn the animated background on or off"><span class="dot"></span><span class="hud-info"><span id="slam-status">slam_toolbox · mapping</span> · <span id="slam-pct">0.0</span>% <span data-i18n>explored</span></span><span class="hud-sw">bg: on</span></button>
+
+<header class="bar">
+  <a class="mark" href="../index.html" aria-label="Home">FB</a>
+  <nav>
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#experience">Experience</a>
+    <a href="../index.html#work">Projects</a>
+    <a href="../index.html#contact">Contact</a>
+  </nav>
+  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+</header>
+
+<main class="wrap case" id="top">
+  <a class="crumb" href="../index.html#work">← All projects</a>
+  <p class="kicker"><span>Project</span><span class="badge hw">REAL HARDWARE</span></p>
+  <h1 class="case-title">3D perception and bin-picking with a UR3e arm</h1>
+  <p class="case-lead">
+    A ROS 2 pipeline from camera pixels to a collision-free pick-and-place on a real UR3e: the robot finds a shoe,
+    locates the hole to grip, computes a grasp pose and plans the motion.
+  </p>
+
+  <dl class="facts">
+    <div><dt>Context</dt><dd>Annual project · European project REMAIN</dd></div>
+    <div><dt>Dates</dt><dd>2025 – 2026 (two semesters)</dd></div>
+    <div><dt>Team</dt><dd>6 students</dd></div>
+    <div><dt>Hardware</dt><dd>UR3e · RealSense D435 (eye-in-hand)</dd></div>
+  </dl>
+
+  <div class="case-hero">
+    <video src="../assets/video/ur3e_binpicking.mp4" poster="../assets/img/ur3e_poster.jpg" controls muted playsinline preload="metadata"></video>
+  </div>
+
+  <div class="case-body">
+  <nav class="toc" aria-label="On this page">
+    <a href="#arch">01 architecture</a><a href="#vision">02 vision</a><a href="#calib">03 calibration</a>
+    <a href="#grasp">04 grasp</a><a href="#motion">05 motion</a><a href="#status">06 status</a>
+  </nav>
+  <div class="case-main">
+
+  <section class="case-sec" id="arch">
+    <h2><span class="sec-id">01</span>Architecture</h2>
+    <p>Three layers that only talk through ROS 2 topics and the TF2 tree, so each one could be tested alone (perception replayed from a rosbag, motion fed by a fake publisher):</p>
+    <div class="flow">
+      <div class="step"><b>hardware</b><span>UR3e driver · RealSense D435 colour + aligned depth</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>perception</b><span>YOLOv11s-seg → PCA grasp → 3D point in <code>base_link</code></span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>motion</b><span>MoveIt 2 (pymoveit2): 10-step pick-and-place</span></div>
+    </div>
+  </section>
+
+  <section class="case-sec" id="vision">
+    <h2><span class="sec-id">02</span>Vision: instance segmentation</h2>
+    <ul>
+      <li>Bounding boxes include background and are too coarse for millimetre gripping, so we chose <b>instance segmentation</b> with <b>YOLOv11s-seg</b>, two classes: <code>shoe</code> and <code>hole</code>.</li>
+      <li>About <b>1,200 images</b> captured in the robot's own workspace and labelled by hand with polygon masks (makesense.ai, then Roboflow).</li>
+    </ul>
+    <div class="callout warn">
+      <b>The false-positive problem.</b> The first model looked perfect on paper (mAP near 100%), but in live tests it
+      detected a human hand as a shoe, which could make the arm try to grab the operator.
+      The fix was in the data: negative backgrounds (empty table, hands, no shoes), explicit classes for the hand and the robot,
+      and shoes seen from extreme angles.
+    </div>
+  </section>
+
+  <section class="case-sec" id="calib">
+    <h2><span class="sec-id">03</span>Hand-eye calibration</h2>
+    <p>
+      The camera is on the wrist, so its pixels must be expressed in the robot's frame. With an ArUco marker and
+      <code>easy_handeye2</code>, about 20 samples gave the transform from <code>tool0</code> to the camera:
+      a 7.0 / −3.8 / 3.1 cm offset and a ~88° rotation about Z, which matches the side bracket on the real robot.
+    </p>
+    <div class="flow">
+      <div class="step"><b>camera frame</b><span>3D point from depth</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>tool0</b><span>hand-eye calibration</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>base_link</b><span>forward kinematics</span></div>
+    </div>
+  </section>
+
+  <section class="case-sec" id="grasp">
+    <h2><span class="sec-id">04</span>Grasp from the mask</h2>
+    <ul>
+      <li><b>PCA on the hole mask</b> gives its centroid and principal axes. The fingers close along the minor axis: shortest travel and the most stable grip.</li>
+      <li>Fingertip points found by walking along the minor axis until the mask edge.</li>
+      <li>Depth = median of a small window, with fallbacks, since one depth pixel is too noisy.</li>
+      <li>Pinhole back-projection, then TF2 to <code>base_link</code>; published as <code>/shoe_detector/grasp_point_base</code>.</li>
+    </ul>
+  </section>
+
+  <section class="case-sec" id="motion">
+    <h2><span class="sec-id">05</span>Safe motion with MoveIt 2</h2>
+    <ul>
+      <li>Table modelled as a collision box; the 3D-printed camera bracket attached to the wrist as a collision object.</li>
+      <li>A virtual box keeps the sampling planner (RRT-Connect) from swinging the elbow behind the robot.</li>
+      <li>Grasp point = median of 5 detections, checked against workspace bounds, then latched so the arm never chases a flickering target.</li>
+      <li>Fixed poses (home, place) recorded in joint space for repeatability; the pick pose is Cartesian, with straight-line descent and retreat.</li>
+      <li>Every motion cancels pending goals, reseeds from <code>/joint_states</code> and retries up to 3 times; speed kept at 3% for safety.</li>
+    </ul>
+    <div class="two-col">
+      <figure><img src="../assets/img/case/ur3e_25.jpg" alt="UR3e approaching the shoe"><figcaption>Approach above the grasp point.</figcaption></figure>
+      <figure><img src="../assets/img/case/ur3e_45.jpg" alt="UR3e moving toward the place pose"><figcaption>Moving to the place side.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="case-sec" id="status">
+    <h2><span class="sec-id">06</span>Honest status</h2>
+    <p>
+      Vision, frame transforms, filtering, planning, execution and recovery all run end to end on the real UR3e.
+      The gripper (OnRobot 2FG7) was never triggered from our pipeline: the bridge between our script and the
+      digital output used by the gripper program did not work in time, so the arm performs the full sequence
+      without closing the fingers. We chose to keep that step as a placeholder rather than ship an unstable call
+      that could stop the arm halfway through a motion.
+    </p>
+  </section>
+  </div>
+  </div>
+
+  <div class="pager">
+    <a href="whole-body-drl.html"><small>← previous</small>Whole-body control with deep RL</a>
+    <a class="next" href="rl-navigation.html"><small>next →</small>RL for robot navigation</a>
+  </div>
+</main>
+
+<footer class="foot wrap">
+  <span>Farah Ben Slimene · Clermont-Ferrand, France</span>
+  <a href="../index.html#contact">Contact</a>
+  <a href="#top">Back to top ↑</a>
+</footer>
+<script src="../lang.js"></script>
+<script src="../robot-bg.js"></script>
+<script src="../case.js"></script>
+</body>
+</html>

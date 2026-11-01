@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KUKA Pose Control — Farah Ben Slimene</title>
+  <meta name="description" content="Joint-space and Cartesian pose control of a 7-DOF KUKA LWR4 in Octave, with dual quaternions and the Jacobian pseudo-inverse.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../v2.css">
+  <link rel="stylesheet" href="../case.css">
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<canvas id="slam" aria-hidden="true"></canvas>
+<div class="bg-scrim" aria-hidden="true"></div>
+<button class="slam-hud" id="slam-toggle" title="Turn the animated background on or off"><span class="dot"></span><span class="hud-info"><span id="slam-status">slam_toolbox · mapping</span> · <span id="slam-pct">0.0</span>% <span data-i18n>explored</span></span><span class="hud-sw">bg: on</span></button>
+
+<header class="bar">
+  <a class="mark" href="../index.html" aria-label="Home">FB</a>
+  <nav>
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#experience">Experience</a>
+    <a href="../index.html#work">Projects</a>
+    <a href="../index.html#contact">Contact</a>
+  </nav>
+  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+</header>
+
+<main class="wrap case" id="top">
+  <a class="crumb" href="../index.html#coursework">← Coursework</a>
+  <p class="kicker"><span>Coursework</span><span class="badge sim">SIMULATION</span></p>
+  <h1 class="case-title">Pose control of a 7-DOF KUKA LWR4</h1>
+  <p class="case-lead">
+    Two kinematic controllers for a redundant arm: one that drives the joints to target angles, and one that drives
+    the end-effector to a target position and orientation. Derived on paper, then simulated in Octave.
+  </p>
+
+  <dl class="facts">
+    <div><dt>Context</dt><dd>Visual servoing lab (TP 2)</dd></div>
+    <div><dt>Year</dt><dd>2026</dd></div>
+    <div><dt>Work</dt><dd>Individual</dd></div>
+    <div><dt>Tools</dt><dd>Octave · dual quaternions</dd></div>
+  </dl>
+
+  <div class="case-hero">
+    <video src="../assets/video/kuka_pose_control.mp4" poster="../assets/img/kuka_poster.png" controls muted playsinline preload="metadata"></video>
+  </div>
+
+  <div class="case-body">
+  <nav class="toc" aria-label="On this page">
+    <a href="#joint">01 joint control</a><a href="#pose">02 pose control</a><a href="#results">03 results</a><a href="#limits">04 limits</a>
+  </nav>
+  <div class="case-main">
+
+  <section class="case-sec" id="joint">
+    <h2><span class="sec-id">01</span>Joint position control</h2>
+    <p>
+      The robot is velocity controlled and simulated as an integrator, <code>q ← q + q̇·Δt</code> with Δt = 1 ms.
+      Imposing an exponential decrease of the joint error gives a proportional law that needs no kinematic model:
+    </p>
+    <div class="callout"><code>q̇ = −λ (q − q_d)</code>, with λ = 10 s⁻¹: every joint converges with the same time constant τ = 0.1 s.</div>
+    <figure>
+      <img src="../assets/img/case/kuka_joint_errors.png" alt="Seven joint errors decreasing exponentially to zero in about 0.3 seconds">
+      <figcaption>Joint errors over time.</figcaption>
+    </figure>
+  </section>
+
+  <section class="case-sec" id="pose">
+    <h2><span class="sec-id">02</span>End-effector pose control</h2>
+    <div class="flow">
+      <div class="step"><b>FKM</b><span>current pose as a unit dual quaternion</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>pose error</b><span>position <code>t − t_d</code> + orientation <code>θu</code></span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>desired twist</b><span><code>v = −λ_t e_t</code>, <code>ω = −λ_r θu</code></span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>J⁺(q)</b><span>pseudo-inverse of the 6×7 Jacobian → q̇</span></div>
+    </div>
+    <ul>
+      <li>The orientation error comes from the quaternion of <code>x · x_d⁻¹</code>, with its sign chosen for the shortest rotation and <code>θ = 2·atan2(‖q_v‖, q_w)</code> for accuracy at small angles.</li>
+      <li>Because <code>θu</code> is an eigenvector of its own interaction matrix, <code>ω = −λ_r θu</code> gives an exact exponential decrease without inverting it.</li>
+      <li>The arm has 7 joints for a 6-D task, so it is redundant: the Moore–Penrose pseudo-inverse picks the minimum-norm joint velocity.</li>
+    </ul>
+  </section>
+
+  <section class="case-sec" id="results">
+    <h2><span class="sec-id">03</span>Results</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>time</th><th>position error</th><th>orientation error</th></tr></thead>
+        <tbody>
+          <tr><td>t = 0</td><td class="num">85.49 cm</td><td class="num">88.16°</td></tr>
+          <tr class="win"><td>t = 4 s</td><td class="num">2.8 × 10⁻² cm</td><td class="num">2.9 × 10⁻² deg</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="two-col">
+      <figure><img src="../assets/img/case/kuka_pose_error_norms.png" alt="Position and orientation error norms decreasing as straight lines on a log scale"><figcaption>Error norms (log scale): straight lines = exponential decay.</figcaption></figure>
+      <figure><img src="../assets/img/case/kuka_pose_final.png" alt="KUKA arm in its final configuration with the end-effector frame on the target frame"><figcaption>Final pose on the target.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="case-sec" id="limits">
+    <h2><span class="sec-id">04</span>Limits I found</h2>
+    <ul>
+      <li><b>Velocity peaks:</b> the joint law asks 500°/s at t = 0, above a real KUKA's limits. A real robot needs a lower gain, saturation, or a smooth reference trajectory.</li>
+      <li><b>Near-singular start:</b> in pose control, q̇₄ peaks at about 1100°/s because the elbow starts close to the stretched-arm singularity (smallest singular value 0.053). A damped least-squares inverse would handle this.</li>
+      <li><b>Link to visual servoing:</b> the same pose controller becomes PBVS when the pose is estimated by a camera instead of the encoders.</li>
+    </ul>
+  </section>
+  </div>
+  </div>
+
+  <div class="pager">
+    <a href="slam-mapping.html"><small>← previous</small>SLAM and robust mapping</a>
+    <a class="next" href="serial-arm-kinematics.html"><small>next →</small>Kinematics of serial arms</a>
+  </div>
+</main>
+
+<footer class="foot wrap">
+  <span>Farah Ben Slimene · Clermont-Ferrand, France</span>
+  <a href="../index.html#contact">Contact</a>
+  <a href="#top">Back to top ↑</a>
+</footer>
+<script src="../lang.js"></script>
+<script src="../robot-bg.js"></script>
+<script src="../case.js"></script>
+</body>
+</html>

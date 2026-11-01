@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RL Navigation — Farah Ben Slimene</title>
+  <meta name="description" content="Policy Gradient, DQN and Actor-Critic implemented from scratch in PyTorch for TurtleBot3 obstacle avoidance in ROS 2 / Gazebo, plus a curriculum-learning DQN.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../v2.css">
+  <link rel="stylesheet" href="../case.css">
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<canvas id="slam" aria-hidden="true"></canvas>
+<div class="bg-scrim" aria-hidden="true"></div>
+<button class="slam-hud" id="slam-toggle" title="Turn the animated background on or off"><span class="dot"></span><span class="hud-info"><span id="slam-status">slam_toolbox · mapping</span> · <span id="slam-pct">0.0</span>% <span data-i18n>explored</span></span><span class="hud-sw">bg: on</span></button>
+
+<header class="bar">
+  <a class="mark" href="../index.html" aria-label="Home">FB</a>
+  <nav>
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#experience">Experience</a>
+    <a href="../index.html#work">Projects</a>
+    <a href="../index.html#contact">Contact</a>
+  </nav>
+  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+</header>
+
+<main class="wrap case" id="top">
+  <a class="crumb" href="../index.html#work">← All projects</a>
+  <p class="kicker"><span>Project</span><span class="badge sim">SIMULATION</span></p>
+  <h1 class="case-title">Reinforcement learning for robot navigation</h1>
+  <p class="case-lead">
+    Teaching a TurtleBot3 to avoid obstacles from its LiDAR alone. We implemented three deep RL algorithms ourselves
+    in PyTorch, compared them, then showed that the training strategy mattered as much as the algorithm.
+  </p>
+
+  <dl class="facts">
+    <div><dt>Context</dt><dd>Team project, IMR</dd></div>
+    <div><dt>Date</dt><dd>Spring 2026</dd></div>
+    <div><dt>Team</dt><dd>3 students</dd></div>
+    <div><dt>Stack</dt><dd>ROS 2 Humble · Gazebo · PyTorch</dd></div>
+  </dl>
+
+  <div class="case-hero">
+    <video src="../assets/video/rl_navigation.mp4" poster="../assets/img/rl_poster.jpg" controls muted playsinline preload="metadata"></video>
+  </div>
+
+  <div class="case-body">
+  <nav class="toc" aria-label="On this page">
+    <a href="#env">01 environment</a><a href="#algos">02 algorithms</a><a href="#debug">03 debugging</a>
+    <a href="#curriculum">04 curriculum</a><a href="#results">05 results</a>
+  </nav>
+  <div class="case-main">
+
+  <section class="case-sec" id="env">
+    <h2><span class="sec-id">01</span>The environment</h2>
+    <p>A Gym-style environment wraps ROS 2: it publishes <code>/cmd_vel</code>, reads <code>/scan</code> and resets the Gazebo simulation.</p>
+    <div class="flow">
+      <div class="step"><b>observation</b><span>24 LiDAR distances (every 15th ray), clipped to 3.5 m</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>policy</b><span>MLP in PyTorch</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>action</b><span>forward · left · right (Twist commands)</span></div>
+    </div>
+    <p>Reward: +1 in free space, −1 when closer than 0.5 m, −200 and episode end on collision (under 0.2 m). Episodes capped at 500 steps.</p>
+  </section>
+
+  <section class="case-sec" id="algos">
+    <h2><span class="sec-id">02</span>Three algorithms, from scratch</h2>
+    <ul>
+      <li><b>Policy Gradient (REINFORCE):</b> 24 → 128 → 3 softmax network, discounted and normalised returns.</li>
+      <li><b>DQN:</b> 24 → 1024 → 512 → 3 Q-network, replay buffer of 10,000 transitions, ε-greedy exploration, Bellman target with γ = 0.95.</li>
+      <li><b>Actor-Critic:</b> an actor (24 → 128 → 3) and a critic (24 → 128 → 1); the advantage <code>A = G − V(s)</code> reduces the variance of the policy update.</li>
+    </ul>
+  </section>
+
+  <section class="case-sec" id="debug">
+    <h2><span class="sec-id">03</span>Debugging the training</h2>
+    <div class="callout warn">
+      <b>A reset bug that silently corrupted training.</b> Policy Gradient crashed with <code>std(): dof &lt;= 0</code> and NaN probabilities.
+      The cause: after the first episode the robot respawned against a wall and crashed at step 1, so every return was −200 and the
+      normalisation divided by zero. Calling Gazebo's <code>/reset_simulation</code> to put the robot back at the centre fixed it.
+    </div>
+    <ul>
+      <li>DQN code inherited from a CartPole exercise had several bugs (uninitialised buffer variables, a missing <code>self</code>, <code>np.arrang</code>).</li>
+      <li>Faster ε decay, an earlier learning start, and a graded reward (−10 very close, +0.5 at a safe distance) to give the network more signal.</li>
+    </ul>
+  </section>
+
+  <section class="case-sec" id="curriculum">
+    <h2><span class="sec-id">04</span>Curriculum-learning DQN</h2>
+    <p>A second DQN with a distributed ROS 2 service architecture, a goal to reach, and two stages of difficulty:</p>
+    <div class="flow">
+      <div class="step"><b>stage 1</b><span>open arena: learn to reach a goal</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>stage 2</b><span>same arena with obstacles, warm-started from stage 1</span></div>
+    </div>
+    <ul>
+      <li>State: distance and heading to the goal + 24 LiDAR rays (26 values); 5 steering actions.</li>
+      <li>Dense reward: facing the goal, progress toward it, a proximity penalty; +100 on success, −50 on collision.</li>
+      <li>Four ROS 2 nodes: Gazebo, goal/reset manager, environment (state and reward), agent.</li>
+    </ul>
+  </section>
+
+  <section class="case-sec" id="results">
+    <h2><span class="sec-id">05</span>Results</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>approach</th><th>success rate</th></tr></thead>
+        <tbody>
+          <tr class="win"><td>Actor-Critic</td><td class="num">70%</td></tr>
+          <tr><td>Policy Gradient</td><td class="num">60%</td></tr>
+          <tr><td>DQN with curriculum (50 test episodes)</td><td class="num">60%</td></tr>
+          <tr><td>DQN trained directly</td><td class="num">&lt;20%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      <b>Takeaway:</b> the same DQN algorithm went from under 20% to 60% success just by changing how it was trained.
+      Without ever reaching a goal early on, the direct DQN learned almost only from crashes. Actor-Critic stayed best
+      thanks to its critic baseline; combining curriculum learning with an actor-critic method such as PPO is the natural next step.
+    </p>
+  </section>
+  </div>
+  </div>
+
+  <div class="pager">
+    <a href="ur3e-bin-picking.html"><small>← previous</small>3D perception and bin-picking (UR3e)</a>
+    <a class="next" href="ar-chess.html"><small>next →</small>Augmented reality chess</a>
+  </div>
+</main>
+
+<footer class="foot wrap">
+  <span>Farah Ben Slimene · Clermont-Ferrand, France</span>
+  <a href="../index.html#contact">Contact</a>
+  <a href="#top">Back to top ↑</a>
+</footer>
+<script src="../lang.js"></script>
+<script src="../robot-bg.js"></script>
+<script src="../case.js"></script>
+</body>
+</html>

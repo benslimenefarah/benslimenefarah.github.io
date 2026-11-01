@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Whole-Body DRL — Farah Ben Slimene</title>
+  <meta name="description" content="Whole-body control of a mobile manipulator with deep reinforcement learning: end-to-end PPO versus a hybrid PBVS + WDLS controller.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../v2.css">
+  <link rel="stylesheet" href="../case.css">
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<canvas id="slam" aria-hidden="true"></canvas>
+<div class="bg-scrim" aria-hidden="true"></div>
+<button class="slam-hud" id="slam-toggle" title="Turn the animated background on or off"><span class="dot"></span><span class="hud-info"><span id="slam-status">slam_toolbox · mapping</span> · <span id="slam-pct">0.0</span>% <span data-i18n>explored</span></span><span class="hud-sw">bg: on</span></button>
+
+<header class="bar">
+  <a class="mark" href="../index.html" aria-label="Home">FB</a>
+  <nav>
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#experience">Experience</a>
+    <a href="../index.html#work">Projects</a>
+    <a href="../index.html#contact">Contact</a>
+  </nav>
+  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+</header>
+
+<main class="wrap case" id="top">
+  <a class="crumb" href="../index.html#work">← All projects</a>
+  <p class="kicker"><span>Project</span><span class="badge sim">SIMULATION</span></p>
+  <h1 class="case-title">Whole-body control of a mobile manipulator with deep reinforcement learning</h1>
+  <p class="case-lead">
+    Should a learned policy drive the robot itself, or only tune an analytic controller?
+    I built and trained both answers for the same robot and the same task, then compared them under one protocol.
+  </p>
+
+  <dl class="facts">
+    <div><dt>Context</dt><dd>Research internship, CIAD lab (UTBM)</dd></div>
+    <div><dt>Dates</dt><dd>May – Sept 2026</dd></div>
+    <div><dt>Robot</dt><dd>AgileX Scout 2.0 + Doosan A0509</dd></div>
+    <div><dt>Stack</dt><dd>Unity ML-Agents, C#, SB3 (PPO)</dd></div>
+  </dl>
+
+  <div class="case-hero">
+    <img src="../assets/img/scout_doosan.jpg" alt="The Scout 2.0 base with the Doosan 6-axis arm, simulated in Unity">
+  </div>
+
+  <div class="case-body">
+  <nav class="toc" aria-label="On this page">
+    <a href="#problem">01 problem</a><a href="#setup">02 setup</a><a href="#e2e">03 end-to-end</a>
+    <a href="#hybrid">04 hybrid</a><a href="#results">05 results</a><a href="#lessons">06 lessons</a><a href="#next">07 next</a>
+  </nav>
+  <div class="case-main">
+
+  <section class="case-sec" id="problem">
+    <h2><span class="sec-id">01</span>The problem</h2>
+    <p>
+      A mobile manipulator is redundant: the base and the arm can both move the gripper, so the same target
+      can be reached in many ways. The task is to bring the gripper to a target pose about 2 m away, which
+      the arm cannot reach alone, so base and arm have to move together.
+    </p>
+    <p>Two ways to use learning for this:</p>
+    <ul>
+      <li><b>End-to-end:</b> the policy outputs the motion directly, i.e. all 8 velocities (2 for the base, 6 for the arm).</li>
+      <li><b>Hybrid:</b> a classical controller (PBVS + Weighted Damped Least Squares) computes the motion, and the policy only outputs its 8 weights, deciding how much the base and each joint should move.</li>
+    </ul>
+  </section>
+
+  <section class="case-sec" id="setup">
+    <h2><span class="sec-id">02</span>Simulation and training setup</h2>
+    <p>
+      I built the robot in Unity from its URDF and manuals, with articulation-body physics.
+      Training runs in headless Unity builds that hold several robots in one scene
+      (16 for the arm-only stages, 8 for the whole body), connected to Stable-Baselines3 through a Gymnasium wrapper.
+    </p>
+    <figure>
+      <img src="../assets/img/case/wbc_training_loop.png" alt="Training loop: N Unity agents send observations and rewards to mlagents_envs, a Gymnasium wrapper and PPO in Stable-Baselines3, which send actions back">
+      <figcaption>Training loop between Unity and Python.</figcaption>
+    </figure>
+  </section>
+
+  <section class="case-sec" id="e2e">
+    <h2><span class="sec-id">03</span>End-to-end model</h2>
+    <p>Built in stages, each warm-started from the previous one:</p>
+    <div class="flow">
+      <div class="step"><b>1 · base</b><span>drive the Scout to a target</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>2 · arm</b><span>reach with the arm, five-stage curriculum on the spawn area</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>3 · whole body</b><span>base + arm together, 8 outputs</span></div>
+    </div>
+    <figure>
+      <img src="../assets/img/case/wbc_policy.png" alt="Policy: robot state goes into a 2x64 tanh network that outputs arm angle increments and base speed and yaw rate">
+      <figcaption>What the policy sees and commands.</figcaption>
+    </figure>
+    <div class="two-col">
+      <figure>
+        <img src="../assets/img/case/wbc_spawn.png" alt="Target spawning area for the six-joint arm stage, seen from above">
+        <figcaption>Target spawn area, last arm stage.</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/img/case/wbc_reward_curve.png" alt="Training reward of the whole-body model over 4 million steps, rising fast then settling around 112">
+        <figcaption>Whole-body training reward (4 M steps).</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="case-sec" id="hybrid">
+    <h2><span class="sec-id">04</span>Hybrid model</h2>
+    <ul>
+      <li>Ported the lab's PBVS + WDLS controller, originally C++ / ROS, into Unity (C#, Math.NET Numerics).</li>
+      <li>The policy outputs the eight WDLS weights; the analytic solve turns them into joint and base velocities.</li>
+      <li>A curriculum progressively widened the range of weights the policy was allowed to use.</li>
+    </ul>
+    <div class="callout">
+      Keeping the analytic controller in the loop means the motion still comes from a solve with known
+      properties. The policy only shapes how the work is shared between base and arm.
+    </div>
+  </section>
+
+  <section class="case-sec" id="results">
+    <h2><span class="sec-id">05</span>Results</h2>
+    <p>
+      Protocol: 3 targets 2 m away (on-axis, arc −20°, arc +20°), 5 passes each, deterministic policy,
+      gate <code>d &lt; 2 cm</code> and <code>φ &lt; 1.15°</code>. Both controllers passed every run.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>metric</th><th>end-to-end</th><th>hybrid</th></tr></thead>
+        <tbody>
+          <tr><td>time to the gate</td><td class="num">8.3 s</td><td class="num">37.0 s</td></tr>
+          <tr><td>min position error</td><td class="num">13.2 mm</td><td class="num">19.1 mm</td></tr>
+          <tr><td>min orientation error</td><td class="num">0.39°</td><td class="num">0.21°</td></tr>
+          <tr><td>path length / straight line</td><td class="num">3.28</td><td class="num">1.09</td></tr>
+          <tr><td>near-goal direction reversals</td><td class="num">28.6</td><td class="num">6.8</td></tr>
+          <tr><td>backtracking</td><td class="num">31%</td><td class="num">0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figure>
+      <img src="../assets/img/case/wbc_trajectories_full.png" alt="Gripper paths in the target frame for both controllers: from above, zoomed on the last 15 cm, and from the side">
+      <figcaption>Gripper paths: from above, zoomed near the target, and from the side.</figcaption>
+    </figure>
+    <p>
+      <b>Answer:</b> producing the motion is over four times faster and the most accurate in position, but less
+      regular and without an analytic guarantee. Producing the weights keeps a near-straight path and that
+      guarantee, but is still slow.
+    </p>
+  </section>
+
+  <section class="case-sec" id="lessons">
+    <h2><span class="sec-id">06</span>What I learned</h2>
+    <ul>
+      <li><b>Silent errors are the expensive ones.</b> A value set in the Unity Inspector overrides the C# default and is frozen into the headless build, so a run can train old code without any error. My launchers check that the build is newer than the sources.</li>
+      <li><b>Mathematics first.</b> Writing an operation mathematically (quaternions, frame changes) before looking for the Unity function, or implementing it when none existed.</li>
+      <li><b>Run discipline.</b> 71 training launchers and 73 model directories: every run documented so results stay comparable.</li>
+    </ul>
+  </section>
+
+  <section class="case-sec" id="next">
+    <h2><span class="sec-id">07</span>Next steps</h2>
+    <ul>
+      <li>Imitation learning from the analytic solve (behaviour cloning, then a short PPO fine-tune).</li>
+      <li>A wider weight range, since the learned weights all stay low, which is what makes the hybrid slow.</li>
+      <li>The real robot, with an Insta360 camera in place of Unity's ground truth.</li>
+    </ul>
+  </section>
+  </div>
+  </div>
+
+  <div class="pager">
+    <a href="../index.html#work"><small>← back</small>All projects</a>
+    <a class="next" href="ur3e-bin-picking.html"><small>next →</small>3D perception and bin-picking (UR3e)</a>
+  </div>
+</main>
+
+<footer class="foot wrap">
+  <span>Farah Ben Slimene · Clermont-Ferrand, France</span>
+  <a href="../index.html#contact">Contact</a>
+  <a href="#top">Back to top ↑</a>
+</footer>
+<script src="../lang.js"></script>
+<script src="../robot-bg.js"></script>
+<script src="../case.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AR Chess — Farah Ben Slimene</title>
+  <meta name="description" content="A real-time augmented reality pipeline: camera calibration, PnP pose estimation and OpenGL rendering of 3D chess pieces on a chessboard.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../v2.css">
+  <link rel="stylesheet" href="../case.css">
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<canvas id="slam" aria-hidden="true"></canvas>
+<div class="bg-scrim" aria-hidden="true"></div>
+<button class="slam-hud" id="slam-toggle" title="Turn the animated background on or off"><span class="dot"></span><span class="hud-info"><span id="slam-status">slam_toolbox · mapping</span> · <span id="slam-pct">0.0</span>% <span data-i18n>explored</span></span><span class="hud-sw">bg: on</span></button>
+
+<header class="bar">
+  <a class="mark" href="../index.html" aria-label="Home">FB</a>
+  <nav>
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#experience">Experience</a>
+    <a href="../index.html#work">Projects</a>
+    <a href="../index.html#contact">Contact</a>
+  </nav>
+  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+</header>
+
+<main class="wrap case" id="top">
+  <a class="crumb" href="../index.html#work">← All projects</a>
+  <p class="kicker"><span>Project</span><span class="badge hw">LIVE CAMERA</span></p>
+  <h1 class="case-title">Augmented reality: from camera calibration to a chess engine</h1>
+  <p class="case-lead">
+    A real-time AR pipeline built from scratch: calibrate a webcam, estimate where it is relative to a chessboard,
+    and render 3D chess pieces that stay anchored to the board as the camera moves.
+  </p>
+
+  <dl class="facts">
+    <div><dt>Context</dt><dd>Computer vision course project</dd></div>
+    <div><dt>Year</dt><dd>2025</dd></div>
+    <div><dt>Work</dt><dd>Individual</dd></div>
+    <div><dt>Stack</dt><dd>Python · OpenCV · OpenGL / GLSL</dd></div>
+  </dl>
+
+  <div class="case-hero">
+    <img src="../assets/img/case/ar_board.png" alt="Full set of red and black 3D chess pieces rendered on a printed chessboard">
+  </div>
+
+  <div class="case-body">
+  <nav class="toc" aria-label="On this page">
+    <a href="#calib">01 calibration</a><a href="#pose">02 pose</a><a href="#render">03 rendering</a><a href="#board">04 the board</a>
+  </nav>
+  <div class="case-main">
+
+  <div class="flow">
+    <div class="step"><b>calibrate</b><span>intrinsics + distortion from chessboard corners</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>detect</b><span>board corners in every frame</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>PnP</b><span>camera pose relative to the board</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>render</b><span>project 3D models with OpenGL</span></div>
+  </div>
+
+  <section class="case-sec" id="calib">
+    <h2><span class="sec-id">01</span>Camera calibration</h2>
+    <ul>
+      <li>A live capture tool: press Q to grab a view, ESC to calibrate. 46 chessboard views were captured, with automatic corner detection and sub-pixel refinement.</li>
+      <li>OpenCV calibration gives the camera matrix and the distortion coefficients, saved to a file and reused by every later stage.</li>
+    </ul>
+    <figure><img src="../assets/img/case/ar_calib.png" alt="Live capture window detecting the chessboard corners, with the instruction Press Q to capture, ESC to calibrate"><figcaption>Corner detection during live capture.</figcaption></figure>
+  </section>
+
+  <section class="case-sec" id="pose">
+    <h2><span class="sec-id">02</span>Pose estimation with PnP</h2>
+    <p>
+      Knowing the board's real geometry and where its corners appear in the image, <code>solvePnP</code> recovers the
+      rotation and translation of the camera. Projecting 3D axes, then a cube, a pyramid and a cylinder checks that the pose is right.
+    </p>
+    <div class="two-col">
+      <figure><img src="../assets/img/case/ar_axis.png" alt="3D coordinate axes drawn on the chessboard"><figcaption>Board frame axes.</figcaption></figure>
+      <figure><img src="../assets/img/case/ar_cube.png" alt="A 3D cube projected on the chessboard"><figcaption>Projected cube.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="case-sec" id="render">
+    <h2><span class="sec-id">03</span>Rendering real 3D models</h2>
+    <ul>
+      <li>A small OBJ loader for the chess piece meshes (king, queen, rook, bishop, knight, pawn).</li>
+      <li>GLSL shaders (model-view-projection and Phong lighting) to draw the pieces over the camera image.</li>
+      <li>Keyboard control to switch objects and scale them in real time (+ / −).</li>
+    </ul>
+    <figure><img src="../assets/img/ar_chess.png" alt="Wireframe 3D king standing on the chessboard"><figcaption>A king anchored on the board.</figcaption></figure>
+  </section>
+
+  <section class="case-sec" id="board">
+    <h2><span class="sec-id">04</span>Placing pieces on squares</h2>
+    <p>
+      Each square's centre is computed in the board frame, so a piece can be placed on any square and the full starting
+      position rendered. Everything is recomputed every frame, so the pieces follow the board as it moves.
+    </p>
+  </section>
+  </div>
+  </div>
+
+  <div class="pager">
+    <a href="rl-navigation.html"><small>← previous</small>RL for robot navigation</a>
+    <a class="next" href="slam-mapping.html"><small>next →</small>SLAM and robust mapping</a>
+  </div>
+</main>
+
+<footer class="foot wrap">
+  <span>Farah Ben Slimene · Clermont-Ferrand, France</span>
+  <a href="../index.html#contact">Contact</a>
+  <a href="#top">Back to top ↑</a>
+</footer>
+<script src="../lang.js"></script>
+<script src="../robot-bg.js"></script>
+<script src="../case.js"></script>
+</body>
+</html>

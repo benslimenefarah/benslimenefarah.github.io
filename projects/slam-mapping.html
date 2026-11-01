@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SLAM Mapping — Farah Ben Slimene</title>
+  <meta name="description" content="SLAM with LiDAR and odometry using SLAM Toolbox, path planning with Nav2 Behavior Trees, and a comparison of 2D and 3D maps.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../v2.css">
+  <link rel="stylesheet" href="../case.css">
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<canvas id="slam" aria-hidden="true"></canvas>
+<div class="bg-scrim" aria-hidden="true"></div>
+<button class="slam-hud" id="slam-toggle" title="Turn the animated background on or off"><span class="dot"></span><span class="hud-info"><span id="slam-status">slam_toolbox · mapping</span> · <span id="slam-pct">0.0</span>% <span data-i18n>explored</span></span><span class="hud-sw">bg: on</span></button>
+
+<header class="bar">
+  <a class="mark" href="../index.html" aria-label="Home">FB</a>
+  <nav>
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#experience">Experience</a>
+    <a href="../index.html#work">Projects</a>
+    <a href="../index.html#contact">Contact</a>
+  </nav>
+  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+</header>
+
+<main class="wrap case" id="top">
+  <a class="crumb" href="../index.html#work">← All projects</a>
+  <p class="kicker"><span>Project</span><span class="badge hw">LIDAR</span></p>
+  <h1 class="case-title">SLAM and robust mapping</h1>
+  <p class="case-lead">
+    Building maps of an environment while localising the robot in it, then planning paths in those maps,
+    across different robot platforms.
+  </p>
+
+  <dl class="facts">
+    <div><dt>Context</dt><dd>Academic project</dd></div>
+    <div><dt>Year</dt><dd>2024 – 2025</dd></div>
+    <div><dt>Sensors</dt><dd>3D LiDAR · odometry</dd></div>
+    <div><dt>Stack</dt><dd>ROS 2 · SLAM Toolbox · Nav2</dd></div>
+  </dl>
+
+  <div class="flow">
+    <div class="step"><b>sense</b><span>LiDAR scans + wheel odometry</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>SLAM Toolbox</b><span>fuse them into a map and a pose</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Nav2</b><span>plan paths, driven by Behavior Trees</span></div>
+  </div>
+
+  <section class="case-sec" id="work">
+    <h2><span class="sec-id">01</span>What I did</h2>
+    <ul>
+      <li>Ran SLAM by fusing LiDAR and odometry data with SLAM Toolbox.</li>
+      <li>Configured Behavior Trees in Nav2 for path planning.</li>
+      <li>Compared the 2D and 3D maps built for different robot platforms.</li>
+    </ul>
+    <div class="callout">
+      This page is a starting point. Add your maps, a screenshot of RViz and the Behavior Tree you used here.
+    </div>
+  </section>
+
+  <div class="pager">
+    <a href="ar-chess.html"><small>← previous</small>Augmented reality chess</a>
+    <a class="next" href="kuka-pose-control.html"><small>next →</small>Coursework: KUKA pose control</a>
+  </div>
+</main>
+
+<footer class="foot wrap">
+  <span>Farah Ben Slimene · Clermont-Ferrand, France</span>
+  <a href="../index.html#contact">Contact</a>
+  <a href="#top">Back to top ↑</a>
+</footer>
+<script src="../lang.js"></script>
+<script src="../robot-bg.js"></script>
+<script src="../case.js"></script>
+</body>
+</html>

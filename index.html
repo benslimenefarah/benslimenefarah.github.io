@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Farah Ben Slimene · Robotics Engineer</title>
+  <meta name="description" content="Farah Ben Slimene: final-year robotics and mechatronics engineering student. Perception, control and deep reinforcement learning, on real robots and in simulation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="v2.css">
+</head>
+<body>
+<a class="skip" href="#about">Skip to content</a>
+
+<!-- robot background (same as draft 1) -->
+<canvas id="slam" aria-hidden="true"></canvas>
+<div class="bg-scrim" aria-hidden="true"></div>
+<button class="slam-hud" id="slam-toggle" title="Turn the animated background on or off"><span class="dot"></span><span class="hud-info"><span id="slam-status">slam_toolbox · exploring</span> · <span id="slam-pct">0.0</span>% explored</span><span class="hud-sw">bg: on</span></button>
+
+<header class="bar">
+  <a class="mark" href="#top" aria-label="Top of page">FB</a>
+  <nav>
+    <a href="#about">About</a>
+    <a href="#skills">Skills</a>
+    <a href="#experience">Experience</a>
+    <a href="#work">Projects</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <a class="bar-cta" href="assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+</header>
+
+<main id="top">
+
+  <!-- ================= HERO (pinned while you scroll) ================= -->
+  <section class="hero" id="hero">
+    <div class="hero-pin">
+      <div class="wrap hero-inner">
+        <p class="eyebrow hero-eyebrow intro"><span>France</span><i class="rule"></i></p>
+        <p class="status intro"><span class="dot"></span>Available · seeking a 6-month end-of-studies robotics internship · 2027</p>
+        <h1 class="name" aria-label="Farah Ben Slimene">
+          <span class="name-line"><span>Farah</span></span>
+          <span class="name-line"><span>Ben Slimene</span></span>
+        </h1>
+        <p class="headline">Robotics engineer in training, building <b>robots that perceive, plan and learn</b>, from simulation to real hardware.</p>
+        <div class="actions intro">
+          <a class="cta" href="#work"><span>See my projects</span><i aria-hidden="true">→</i></a>
+          <a class="ghost" href="assets/BEN_SLIMENE_Farah_CV.pdf">Download CV</a>
+        </div>
+      </div>
+      <a class="scroll-hint intro" href="#about" aria-label="Scroll down"><span class="mouse"><i></i></span>Scroll down</a>
+    </div>
+  </section>
+
+  <!-- ================= ABOUT ================= -->
+  <section class="sec" id="about">
+    <div class="wrap">
+      <div class="sec-head reveal"><p class="eyebrow">About</p><h2>Hi there!</h2></div>
+      <div class="about-grid">
+        <button class="portrait reveal" aria-label="Flip the photo">
+          <span class="portrait-card">
+            <span class="face front"><img src="assets/img/photo.jpg" alt="Farah Ben Slimene"></span>
+            <span class="face back">
+              <span class="back-k">currently</span><span class="back-v">Clermont-Ferrand, France</span>
+              <span class="back-k">studying</span><span class="back-v">Robotics &amp; Mechatronics</span>
+              <span class="back-k">looking for</span><span class="back-v">6-month internship · 2027</span>
+              <span class="back-k">languages</span><span class="back-v">EN · FR · AR · TR</span>
+            </span>
+          </span>
+          <span class="portrait-hint">click to flip</span>
+        </button>
+        <div>
+          <p class="lede" id="lede">I design and build intelligent robotic systems, bridging AI, control and mechanical engineering to bring ideas from simulation to real-world applications.</p>
+          <div class="notes reveal">
+            <p>Final-year engineering student on a double degree: Mechatronics at ENISo (Tunisia) and Innovative Mechanisms &amp; Robots at SIGMA Clermont (France). Two diplomas on the way, because apparently one wasn't enough, and neither was hardware alone, so I started teaching robots to learn.</p>
+            <p>Right now I'm looking for a 6-month end-of-studies internship where I can keep pursuing what I love: robots that see, move and learn.</p>
+            <p>I like building things, breaking them in simulation first, and occasionally wondering why my robot decided the wall was the optimal policy.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TOOLBOX ================= -->
+  <section class="sec" id="skills">
+    <div class="wrap">
+      <div class="sec-head reveal"><p class="eyebrow">Toolbox</p><h2>What I build with</h2></div>
+      <div class="skills-grid">
+        <div class="skillgroup reveal">
+          <h3>Languages</h3>
+          <div class="tools">
+            <span data-i="python/python-original">Python</span>
+            <span data-i="c/c-original">C</span>
+            <span data-i="cplusplus/cplusplus-original">C++</span>
+            <span data-i="csharp/csharp-original">C#</span>
+            <span data-i="matlab/matlab-original">MATLAB</span>
+          </div>
+        </div>
+        <div class="skillgroup reveal">
+          <h3>Robotics &amp; simulation</h3>
+          <div class="tools">
+            <span data-i="ros/ros-original" data-inv>ROS 2</span>
+            <span>MoveIt 2</span>
+            <span>Nav2</span>
+            <span>Gazebo</span>
+            <span data-i="unity/unity-original" data-inv>Unity</span>
+            <span>Simulink</span>
+          </div>
+        </div>
+        <div class="skillgroup reveal">
+          <h3>AI · ML · Deep RL</h3>
+          <div class="tools">
+            <span data-i="pytorch/pytorch-original">PyTorch</span>
+            <span>Stable-Baselines3</span>
+            <span>PPO · DQN · Actor-Critic</span>
+            <span>Unity ML-Agents</span>
+            <span>YOLOv11</span>
+            <span data-i="opencv/opencv-original">OpenCV</span>
+          </div>
+        </div>
+        <div class="skillgroup reveal">
+          <h3>Design &amp; tools</h3>
+          <div class="tools">
+            <span>SolidWorks (CSWP)</span>
+            <span>MSC Adams</span>
+            <span data-i="git/git-original">Git</span>
+            <span data-i="github/github-original" data-inv>GitHub</span>
+            <span data-i="linux/linux-original">Linux</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EXPERIENCE (sticky index) ================= -->
+  <section class="sec" id="experience">
+    <div class="wrap xp-grid">
+      <aside class="xp-index">
+        <div class="sec-head reveal"><p class="eyebrow">Experience</p><h2>Where I've been</h2></div>
+        <ol class="xp-list">
+          <li><a href="#job-ciad" data-on="1"><span class="n">01</span><span class="t">CIAD lab, UTBM<em>Research intern</em></span><span class="y">2026</span></a></li>
+          <li><a href="#job-remain"><span class="n">02</span><span class="t">SIGMA Clermont<em>REMAIN bin-picking project</em></span><span class="y">2026</span></a></li>
+          <li><a href="#job-casco"><span class="n">03</span><span class="t">CASCO Automotive<em>Engineering intern</em></span><span class="y">2025</span></a></li>
+          <li><a href="#job-edu"><span class="n">04</span><span class="t">Education<em>Double degree</em></span><span class="y">2021–27</span></a></li>
+        </ol>
+      </aside>
+      <div class="xp-entries">
+        <article class="job reveal" id="job-ciad">
+          <p class="job-meta">May 2026 – Sep 2026 · Montbéliard, France</p>
+          <h3>Research intern, deep RL for robot control</h3>
+          <p class="job-org">CIAD lab, UTBM</p>
+          <ul>
+            <li>Whole-body control of a mobile manipulator (AgileX Scout 2.0 base + Doosan 6-axis arm) simulated in Unity ML-Agents.</li>
+            <li>Trained PPO policies (Stable-Baselines3) in two architectures: end-to-end, and hybrid with a PBVS + WDLS controller.</li>
+            <li>End-to-end reached the target in 8.3 s with 13 mm error. The hybrid policy gave the most direct paths (ratio 1.09 vs 3.28).</li>
+          </ul>
+          <p class="chips"><span>PPO</span><span>Unity ML-Agents</span><span>C#</span><span>Python</span><span>PBVS</span><span>WDLS</span></p>
+        </article>
+        <article class="job reveal" id="job-remain">
+          <p class="job-meta">2025 – 2026 · Clermont-Ferrand, France</p>
+          <h3>Annual team project, 3D perception &amp; bin-picking</h3>
+          <p class="job-org">European project REMAIN · real UR3e arm</p>
+          <ul>
+            <li>Trained a YOLOv11s-seg model on ~1,200 hand-labelled images to find shoes and their holes.</li>
+            <li>Grasp pose from PCA on the mask, back-projected with depth; hand-eye calibration with ArUco markers.</li>
+            <li>10-step MoveIt 2 pick-and-place sequence run on the real robot.</li>
+          </ul>
+          <p class="chips"><span>ROS 2</span><span>MoveIt 2</span><span>YOLOv11</span><span>RealSense</span><span>OpenCV</span></p>
+        </article>
+        <article class="job reveal" id="job-casco">
+          <p class="job-meta">Jul 2025 – Aug 2025 · Tunisia</p>
+          <h3>Engineering intern, automation &amp; machine vision</h3>
+          <p class="job-org">CASCO Automotive</p>
+          <ul>
+            <li>Deployed real-time machine-vision quality control with a Keyence camera.</li>
+            <li>Programmed an automated assembly station for high-voltage components.</li>
+          </ul>
+          <p class="chips"><span>Machine vision</span><span>Keyence</span><span>Automation</span></p>
+        </article>
+        <article class="job reveal" id="job-edu">
+          <p class="job-meta">2021 – 2027</p>
+          <h3>Education</h3>
+          <dl class="edu">
+            <dt>2025 – 2027</dt><dd><b>Engineering degree, Innovative Mechanisms &amp; Robots</b>SIGMA Clermont (Clermont Auvergne INP), France · double degree</dd>
+            <dt>2023 – 2027</dt><dd><b>National engineering degree, Mechatronics</b>ENISo, Sousse, Tunisia</dd>
+            <dt>2021 – 2023</dt><dd><b>Preparatory classes, Mathematics &amp; Physics</b>IPEIB, Bizerte, Tunisia</dd>
+          </dl>
+          <p class="chips"><span>CSWP · SolidWorks Professional</span><span>CSWA · SolidWorks Associate</span><span>TOEIC 920</span></p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROJECTS (live, interactive previews; photos live on each project page) ================= -->
+  <section class="sec" id="work">
+    <span id="projects" class="alias"></span>
+    <div class="wrap">
+      <div class="work-head reveal">
+        <div class="sec-head"><p class="eyebrow">Projects</p><h2>My projects</h2></div>
+        <div class="tabs" role="tablist" aria-label="Filter projects">
+          <button class="on" data-f="all">All</button>
+          <button data-f="rl">Deep RL</button>
+          <button data-f="hw">Hardware</button>
+          <button data-f="vision">Vision</button>
+        </div>
+      </div>
+
+      <div class="index">
+        <div class="col">
+          <a class="item" data-tags="rl" href="projects/whole-body-drl.html">
+            <span class="stage s-a tall"><span class="screen"><canvas class="viz" data-viz="wbc" aria-label="Interactive preview: a mobile manipulator reaching a target"></canvas><span class="hint">move your cursor · set the target</span></span></span>
+            <span class="meta"><b>Whole-body control with deep RL</b><em>Research internship · PPO · Unity</em></span>
+          </a>
+          <a class="item" data-tags="rl" href="projects/rl-navigation.html">
+            <span class="stage s-b"><span class="screen"><canvas class="viz" data-viz="nav" aria-label="Interactive preview: a robot navigating with LiDAR"></canvas><span class="hint">move your cursor · place the goal</span></span></span>
+            <span class="meta"><b>RL navigation from scratch</b><em>PyTorch · DQN · Actor-Critic</em></span>
+          </a>
+          <a class="item" data-tags="hw" href="projects/slam-mapping.html">
+            <span class="stage s-c"><span class="screen"><canvas class="viz" data-viz="slam" aria-label="Interactive preview: LiDAR SLAM building a map"></canvas><span class="hint">move your cursor · drive the robot</span></span></span>
+            <span class="meta"><b>SLAM &amp; mapping</b><em>ROS 2 · SLAM Toolbox · Nav2</em></span>
+          </a>
+        </div>
+        <div class="col">
+          <a class="item" data-tags="hw vision" href="projects/ur3e-bin-picking.html">
+            <span class="stage s-d"><span class="screen"><canvas class="viz" data-viz="pick" aria-label="Interactive preview: instance segmentation and grasp poses on shoes"></canvas><span class="hint">hover a shoe · see its grasp</span></span></span>
+            <span class="meta"><b>3D perception &amp; bin-picking</b><em>Real UR3e · ROS 2 · YOLOv11 · MoveIt 2</em></span>
+          </a>
+          <a class="item" data-tags="vision" href="projects/ar-chess.html">
+            <span class="stage s-c tall"><span class="screen"><canvas class="viz" data-viz="ar" aria-label="Interactive preview: augmented reality on a chessboard"></canvas><span class="hint">move your cursor · move the camera</span></span></span>
+            <span class="meta"><b>Augmented reality chess</b><em>Camera calibration · PnP · OpenGL</em></span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COURSEWORK ================= -->
+  <section class="sec" id="coursework">
+    <div class="wrap">
+      <div class="sec-head reveal"><p class="eyebrow">Coursework</p><h2>Robotics fundamentals</h2></div>
+      <div class="course-grid">
+        <a class="item reveal" href="projects/kuka-pose-control.html">
+          <span class="stage s-b"><span class="screen"><canvas class="viz" data-viz="kuka" aria-label="Interactive preview: pose control converging to a target"></canvas><span class="hint">move your cursor</span></span></span>
+          <span class="meta"><b>Pose control of a KUKA LWR4</b><em>Dual quaternions · Octave</em></span>
+        </a>
+        <a class="item reveal" href="projects/serial-arm-kinematics.html">
+          <span class="stage s-a"><span class="screen"><canvas class="viz" data-viz="kin" aria-label="Interactive preview: inverse kinematics of a serial arm"></canvas><span class="hint">move your cursor</span></span></span>
+          <span class="meta"><b>Kinematics of serial arms</b><em>FK / IK · screw theory · MATLAB</em></span>
+        </a>
+        <a class="item reveal" href="projects/fourbar-adams.html">
+          <span class="stage s-d"><span class="screen"><canvas class="viz" data-viz="fourbar" aria-label="Interactive preview: four-bar linkage and its coupler curve"></canvas><span class="hint">move your cursor · turn the crank</span></span></span>
+          <span class="meta"><b>Four-bar linkage in MSC Adams</b><em>Constraints · singularities</em></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTACT ================= -->
+  <section class="sec contact" id="contact">
+    <div class="wrap">
+      <p class="eyebrow reveal">Contact</p>
+      <h2 class="big reveal">Let's build<br>something.</h2>
+      <p class="contact-sub reveal">Open to a 6-month end-of-studies robotics internship starting in 2027.</p>
+      <a class="mail reveal" href="mailto:farah.ben_slimene@sigma-clermont.fr">farah.ben_slimene@sigma-clermont.fr</a>
+      <p class="links reveal">
+        <a href="https://www.linkedin.com/in/YOUR-LINKEDIN">LinkedIn ↗</a>
+        <a href="https://github.com/YOUR-GITHUB">GitHub ↗</a>
+        <a href="assets/BEN_SLIMENE_Farah_CV.pdf">Résumé PDF ↓</a>
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <span>Farah Ben Slimene · Clermont-Ferrand, France</span>
+  <span>Thanks for scrolling all the way down :)</span>
+  <a href="#top">Back to top ↑</a>
+</footer>
+
+<div class="view-pill" aria-hidden="true">View project <i>→</i></div>
+
+<script src="lang-v2.js"></script>
+<script src="robot-bg.js"></script>
+<script src="viz.js"></script>
+<script src="v2.js"></script>
+</body>
+</html>
