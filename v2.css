@@ -314,3 +314,19 @@ body.bg-off .hud-sw { color: var(--muted); }
   background: #fff; border-radius: 8px; padding: 4px 8px; box-sizing: content-box; }
 .job-org { display: flex; align-items: center; flex-wrap: wrap; }
 .edu dd.has-logo .org-logo { float: left; width: 40px; height: 34px; padding: 4px; margin: 2px 14px 4px 0; }
+
+/* certificates (education) */
+.cert-k { margin: 4px 0 12px; font: 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.certs { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 0 0 16px; }
+.cert { display: flex; align-items: center; gap: 14px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; color: var(--text); transition: border-color .3s, transform .3s var(--ease); }
+.cert:hover { border-color: var(--accent); transform: translateY(-2px); }
+.cert img { width: 96px; height: auto; flex: none; border-radius: 6px; background: #fff; box-shadow: 0 6px 18px -8px rgba(0,0,0,.6); }
+.cert-txt { display: flex; flex-direction: column; min-width: 0; }
+.cert-txt b { font: 600 16px var(--display); }
+.cert-txt em { font: normal 13px/1.35 var(--sans); color: var(--muted); }
+.cert-txt small { margin-top: 4px; white-space: nowrap; font: 11px var(--mono); color: var(--accent); }
+
+/* "click for more details" under project cards */
+.item .more { display: inline-flex; gap: 6px; padding: 8px 4px 0; font: 12px var(--mono); color: var(--accent); }
+.item .more i { font-style: normal; transition: transform .3s var(--ease); }
+.item:hover .more i { transform: translateX(4px); }

@@ -196,8 +196,7 @@
     </figure>
     <p>
       <b>Answer:</b> producing the motion is over four times faster and the most accurate in position, but less
-      regular and without an analytic guarantee. Producing the weights keeps a near-straight path and that
-      guarantee, but is still slow.
+      regular and without the guarantees of the model-based controller. Producing the weights keeps a near-straight path and those guarantees, but is still slow.
     </p>
   </section>
 
@@ -213,7 +212,7 @@
   <section class="case-sec" id="next">
     <h2><span class="sec-id">09</span>Next steps</h2>
     <ul>
-      <li>Imitation learning from the analytic solve (behaviour cloning, then a short PPO fine-tune).</li>
+      <li>Imitation learning from the model-based controller (behaviour cloning, then a short PPO fine-tune).</li>
       <li>A wider weight range, since the learned weights all stay low, which is what makes the hybrid slow.</li>
       <li>The real robot, with an Insta360 camera in place of Unity's ground truth.</li>
     </ul>
