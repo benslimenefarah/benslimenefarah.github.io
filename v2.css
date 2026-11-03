@@ -308,3 +308,9 @@ body.bg-off .hud-sw { color: var(--muted); }
 @keyframes wipSlide { from { transform: translateX(-10%); } to { transform: translateX(160%); } }
 @media (prefers-reduced-motion: reduce) { .badge-wip i, .wip-bar i { animation: none; } }
 @media (max-width: 680px) { .wip-grid { grid-template-columns: 1fr; } .wip-head { margin-top: 48px; } }
+
+/* school / lab logos in the experience entries */
+.org-logo { height: 30px; width: auto; max-width: 140px; object-fit: contain; vertical-align: middle; margin-right: 12px;
+  background: #fff; border-radius: 8px; padding: 4px 8px; box-sizing: content-box; }
+.job-org { display: flex; align-items: center; flex-wrap: wrap; }
+.edu dd.has-logo .org-logo { float: left; width: 40px; height: 34px; padding: 4px; margin: 2px 14px 4px 0; }
