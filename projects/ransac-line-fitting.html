@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RANSAC Line Fitting — Farah Ben Slimene</title>
+  <meta name="description" content="RANSAC for 2D line fitting in Octave: chi-squared inlier threshold, adaptive number of trials, total least squares and a 1000-run Monte Carlo check.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../v2.css">
+  <link rel="stylesheet" href="../case.css">
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<canvas id="slam" aria-hidden="true"></canvas>
+<div class="bg-scrim" aria-hidden="true"></div>
+<button class="slam-hud" id="slam-toggle" title="Turn the animated background on or off"><span class="dot"></span><span class="hud-info"><span id="slam-status">slam_toolbox · mapping</span> · <span id="slam-pct">0.0</span>% <span data-i18n>explored</span></span><span class="hud-sw">bg: on</span></button>
+
+<header class="bar">
+  <a class="mark" href="../index.html" aria-label="Home">FB</a>
+  <nav>
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#experience">Experience</a>
+    <a href="../index.html#work">Projects</a>
+    <a href="../index.html#contact">Contact</a>
+  </nav>
+  <span class="cv-split bar-pick"><span class="cv-lab">CV</span><a href="../assets/BEN_SLIMENE_Farah_CV_EN.pdf" target="_blank" rel="noopener" aria-label="CV in English (PDF)">EN</a><a href="../assets/BEN_SLIMENE_Farah_CV_FR.pdf" target="_blank" rel="noopener" aria-label="CV en français (PDF)">FR</a></span>
+</header>
+
+<main class="wrap case" id="top">
+  <a class="crumb" href="../index.html#coursework">← Coursework</a>
+  <p class="kicker"><span>Coursework</span><span class="badge sim">SIMULATION</span></p>
+  <h1 class="case-title">Robust line fitting with RANSAC</h1>
+  <p class="case-lead">
+    Fitting a line when part of the data is wrong. RANSAC built from scratch in Octave, first with hand-set
+    parameters, then with a threshold from noise statistics and a number of trials that adapts to the data, and
+    checked over 1000 Monte Carlo runs.
+  </p>
+
+  <dl class="facts">
+    <div><dt>Context</dt><dd>Special Topics on Perception and Robotics (S9)</dd></div>
+    <div><dt>Dates</dt><dd>Oct – Nov 2026</dd></div>
+    <div><dt>Work</dt><dd>Individual</dd></div>
+    <div><dt>Tools</dt><dd>Octave · LaTeX</dd></div>
+  </dl>
+
+  <div class="case-hero">
+    <img src="../assets/img/case/ransac_adaptive_result.png" alt="Noisy points along a line: green inliers inside a dashed band around the fitted blue line, red outliers far from it">
+  </div>
+
+  <div class="case-body">
+  <nav class="toc" aria-label="On this page">
+    <a href="#model">01 model</a><a href="#fixed">02 fixed RANSAC</a><a href="#adaptive">03 adaptive</a><a href="#montecarlo">04 Monte Carlo</a>
+  </nav>
+  <div class="case-main">
+
+  <div class="flow">
+    <div class="step"><b>sample</b><span>2 random points</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>model</b><span>line l = p × q</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>consensus</b><span>points closer than t</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>refit</b><span>total least squares on the best set</span></div>
+  </div>
+
+  <section class="case-sec" id="model">
+    <h2><span class="sec-id">01</span>Model and inlier test</h2>
+    <ul>
+      <li>A line through two points in homogeneous coordinates is <code>l = p̃ × q̃ = (a, b, c)</code>, so a sample needs s = 2 points.</li>
+      <li>With <code>a² + b² = 1</code>, the distance from a point to the line is simply <code>|ax + by + c|</code>.</li>
+      <li>The final line is a total least-squares fit: it passes through the centroid, and its normal is the singular vector of the centred points with the smallest singular value.</li>
+    </ul>
+  </section>
+
+  <section class="case-sec" id="fixed">
+    <h2><span class="sec-id">02</span>Part I: fixed parameters</h2>
+    <p>
+      10 points, 3 of them outliers. With an inlier ratio w = 0.7, the number of samples needed for a 99% chance of
+      drawing at least one clean pair is:
+    </p>
+    <div class="callout"><code>N = log(1 − p) / log(1 − wˢ) = log 0.01 / log 0.51 = 6.84 → 7</code></div>
+    <figure class="multi">
+      <img src="../assets/img/case/ransac_trials.png" alt="Seven small plots, one per trial, showing the sampled pair in red, the candidate line and its consensus set in green">
+      <figcaption>The 7 trials: sampled pair (red), band ±t, consensus set (green). Trial 7 finds all 7 inliers.</figcaption>
+    </figure>
+    <figure class="multi">
+      <img src="../assets/img/case/ransac_mc_part1.png" alt="Histograms: RANSAC orientation errors concentrated near zero, least-squares errors spread up to 30 degrees; trials used before termination">
+      <figcaption>Over repeated runs, RANSAC keeps the orientation error near zero, while plain least squares is pulled away by the outliers.</figcaption>
+    </figure>
+  </section>
+
+  <section class="case-sec" id="adaptive">
+    <h2><span class="sec-id">03</span>Part II: parameters from the data</h2>
+    <ul>
+      <li><b>Threshold from noise statistics.</b> For Gaussian noise σ, <code>d²/σ²</code> follows a χ² law with one degree of freedom (a line has codimension 1). Accepting 95% of inliers gives <code>t² = 3.84 σ²</code>, so <code>t = 1.96σ = 0.098</code> for σ = 0.05.</li>
+      <li><b>Adaptive number of trials.</b> Start from the worst case ε = 0.5 (N = 17). Each time a larger consensus set is found, update <code>ε = 1 − |Sᵢ|/m</code> and recompute N. ε can only decrease, so N never grows back.</li>
+      <li><b>Refit and re-check.</b> After the TLS refit, the consensus set is recomputed with the refined line, which recovers inliers that the 2-point model missed.</li>
+    </ul>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>test set: 20 points, 20% outliers</th><th>value</th></tr></thead>
+        <tbody>
+          <tr><td>trials used</td><td class="num">5 (instead of 17)</td></tr>
+          <tr><td>inliers found</td><td class="num">16 / 16, no outlier kept</td></tr>
+          <tr class="win"><td>angle error, RANSAC</td><td class="num">0.89°</td></tr>
+          <tr><td>angle error, least squares on all points</td><td class="num">3.98°</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="case-sec" id="montecarlo">
+    <h2><span class="sec-id">04</span>Monte Carlo check</h2>
+    <p>1000 runs, with a new line, new noise and new outliers each time:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>quantity</th><th>result</th></tr></thead>
+        <tbody>
+          <tr><td>true inliers within t of the true line</td><td class="num">94.9% (theory 95%)</td></tr>
+          <tr class="win"><td>final consensus set outlier-free</td><td class="num">100%</td></tr>
+          <tr><td>mean trials</td><td class="num">6.84 (fixed N = 17)</td></tr>
+          <tr><td>mean angle error, final line</td><td class="num">1.76°</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figure>
+      <img src="../assets/img/case/ransac_trials_vs_eps.png" alt="Number of trials against outlier proportion: the adaptive mean stays below the fixed N of 17 and follows the known-epsilon curve">
+      <figcaption>Trials needed against the true outlier proportion: the adaptive version stays close to the ideal N computed with the true ε.</figcaption>
+    </figure>
+  </section>
+  </div>
+  </div>
+
+  <div class="pager">
+    <a href="rigid-motion-geometry.html"><small>← previous</small>Geometry of rigid motion</a>
+    <a class="next" href="fourbar-adams.html"><small>next →</small>Four-bar linkage in MSC Adams</a>
+  </div>
+</main>
+
+<footer class="foot wrap">
+  <span>Farah Ben Slimene · Clermont-Ferrand, France</span>
+  <a href="../index.html#contact">Contact</a>
+  <a href="#top">Back to top ↑</a>
+</footer>
+<script src="../lang.js"></script>
+<script src="../robot-bg.js"></script>
+<script src="../case.js"></script>
+</body>
+</html>

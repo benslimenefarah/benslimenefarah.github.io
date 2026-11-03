@@ -26,7 +26,7 @@
     <a href="../index.html#work">Projects</a>
     <a href="../index.html#contact">Contact</a>
   </nav>
-  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+  <span class="cv-split bar-pick"><span class="cv-lab">CV</span><a href="../assets/BEN_SLIMENE_Farah_CV_EN.pdf" target="_blank" rel="noopener" aria-label="CV in English (PDF)">EN</a><a href="../assets/BEN_SLIMENE_Farah_CV_FR.pdf" target="_blank" rel="noopener" aria-label="CV en français (PDF)">FR</a></span>
 </header>
 
 <main class="wrap case" id="top">
@@ -34,7 +34,7 @@
   <p class="kicker"><span>Project</span><span class="badge sim">SIMULATION</span></p>
   <h1 class="case-title">Whole-body control of a mobile manipulator with deep reinforcement learning</h1>
   <p class="case-lead">
-    Should a learned policy drive the robot itself, or only tune an analytic controller?
+    Should a learned policy drive the robot itself, or only tune a model-based controller?
     I built and trained both answers for the same robot and the same task, then compared them under one protocol.
   </p>
 
@@ -46,13 +46,14 @@
   </dl>
 
   <div class="case-hero">
-    <img src="../assets/img/scout_doosan.jpg" alt="The Scout 2.0 base with the Doosan 6-axis arm, simulated in Unity">
+    <img src="../assets/img/scout_doosan_closeup.jpg" alt="Close-up of the Scout 2.0 base with the Doosan 6-axis arm reaching toward a target, simulated in Unity">
   </div>
 
   <div class="case-body">
   <nav class="toc" aria-label="On this page">
-    <a href="#problem">01 problem</a><a href="#setup">02 setup</a><a href="#e2e">03 end-to-end</a>
-    <a href="#hybrid">04 hybrid</a><a href="#results">05 results</a><a href="#lessons">06 lessons</a><a href="#next">07 next</a>
+    <a href="#problem">01 problem</a><a href="#setup">02 setup</a><a href="#base">03 the base</a>
+    <a href="#arm">04 the arm</a><a href="#e2e">05 end-to-end</a><a href="#hybrid">06 hybrid</a>
+    <a href="#results">07 results</a><a href="#lessons">08 lessons</a><a href="#next">09 next</a>
   </nav>
   <div class="case-main">
 
@@ -60,13 +61,13 @@
     <h2><span class="sec-id">01</span>The problem</h2>
     <p>
       A mobile manipulator is redundant: the base and the arm can both move the gripper, so the same target
-      can be reached in many ways. The task is to bring the gripper to a target pose about 2 m away, which
-      the arm cannot reach alone, so base and arm have to move together.
+      can be reached in many ways. Here the target sits 2 m away while the arm reaches about 0.9 m,
+      so the base has to drive and the arm has to finish the job, together.
     </p>
     <p>Two ways to use learning for this:</p>
     <ul>
       <li><b>End-to-end:</b> the policy outputs the motion directly, i.e. all 8 velocities (2 for the base, 6 for the arm).</li>
-      <li><b>Hybrid:</b> a classical controller (PBVS + Weighted Damped Least Squares) computes the motion, and the policy only outputs its 8 weights, deciding how much the base and each joint should move.</li>
+      <li><b>Hybrid:</b> a model-based controller (PBVS + Weighted Damped Least Squares) computes the motion from the robot's kinematic model, and the policy only outputs its 8 weights, deciding how much the base and each joint should move.</li>
     </ul>
   </section>
 
@@ -81,11 +82,7 @@
       <img src="../assets/img/case/wbc_training_loop.png" alt="Training loop: N Unity agents send observations and rewards to mlagents_envs, a Gymnasium wrapper and PPO in Stable-Baselines3, which send actions back">
       <figcaption>Training loop between Unity and Python.</figcaption>
     </figure>
-  </section>
-
-  <section class="case-sec" id="e2e">
-    <h2><span class="sec-id">03</span>End-to-end model</h2>
-    <p>Built in stages, each warm-started from the previous one:</p>
+    <p>The end-to-end model was built in stages, each warm-started from the previous one:</p>
     <div class="flow">
       <div class="step"><b>1 · base</b><span>drive the Scout to a target</span></div>
       <div class="arrow">→</div>
@@ -93,14 +90,52 @@
       <div class="arrow">→</div>
       <div class="step"><b>3 · whole body</b><span>base + arm together, 8 outputs</span></div>
     </div>
+  </section>
+
+  <section class="case-sec" id="base">
+    <h2><span class="sec-id">03</span>Step 1: drive the base</h2>
+    <p>
+      The first policy only drives the Scout. From 4 observations it outputs 2 commands, forward speed and yaw rate,
+      and brings the base close to the target. It reached the 0.6 m gate in all 11 evaluation episodes.
+    </p>
     <figure>
-      <img src="../assets/img/case/wbc_policy.png" alt="Policy: robot state goes into a 2x64 tanh network that outputs arm angle increments and base speed and yaw rate">
-      <figcaption>What the policy sees and commands.</figcaption>
+      <video src="../assets/video/wbc_base.mp4" poster="../assets/img/case/wbc_base_poster.jpg" muted loop playsinline preload="metadata" data-auto aria-label="The Scout base driving toward a target"></video>
+      <figcaption>Stage 1: the base policy driving to the target.</figcaption>
+    </figure>
+  </section>
+
+  <section class="case-sec" id="arm">
+    <h2><span class="sec-id">04</span>Step 2: reach with the arm</h2>
+    <p>
+      Then the arm alone, with the base standing still. The policy moves the six joints of the Doosan arm
+      to bring the gripper onto the target in position <b>and</b> orientation, until the gripper frame and the target frame
+      sit on top of each other. A five-stage curriculum gradually widened the area where targets could appear.
+    </p>
+    <figure>
+      <video src="../assets/video/wbc_arm.mp4" poster="../assets/img/case/wbc_arm_poster.jpg" muted loop playsinline preload="metadata" data-auto aria-label="The Doosan arm aligning its gripper with targets"></video>
+      <figcaption>Stage 2: the arm aligns the gripper frame (RGB axes) with the target frame, base standing still.</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/img/case/wbc_spawn.png" alt="Target spawning area for the six-joint arm stage, seen from above">
+      <figcaption>Target spawn area, last arm stage.</figcaption>
+    </figure>
+  </section>
+
+  <section class="case-sec" id="e2e">
+    <h2><span class="sec-id">05</span>Step 3: the whole body, end-to-end</h2>
+    <p>
+      Finally both together. One policy outputs all 8 velocities, 2 for the base and 6 for the arm:
+      the base covers the long distance and the arm does the final alignment.
+      It reaches the target in 8.3 s on average, within 2 cm and 1.15°.
+    </p>
+    <figure class="multi">
+      <video src="../assets/video/wbc_e2e.mp4" poster="../assets/img/case/wbc_e2e_poster.jpg" muted loop playsinline preload="metadata" data-auto aria-label="The end-to-end policy driving base and arm together to the target"></video>
+      <figcaption>Stage 3: the end-to-end policy drives base and arm together, real time. Three synchronised cameras: side (left), gripper close-up (top right), top view (bottom right).</figcaption>
     </figure>
     <div class="two-col">
       <figure>
-        <img src="../assets/img/case/wbc_spawn.png" alt="Target spawning area for the six-joint arm stage, seen from above">
-        <figcaption>Target spawn area, last arm stage.</figcaption>
+        <img src="../assets/img/case/wbc_policy.png" alt="Policy: robot state goes into a 2x64 tanh network that outputs arm angle increments and base speed and yaw rate">
+        <figcaption>What the policy sees and commands.</figcaption>
       </figure>
       <figure>
         <img src="../assets/img/case/wbc_reward_curve.png" alt="Training reward of the whole-body model over 4 million steps, rising fast then settling around 112">
@@ -110,20 +145,34 @@
   </section>
 
   <section class="case-sec" id="hybrid">
-    <h2><span class="sec-id">04</span>Hybrid model</h2>
+    <h2><span class="sec-id">06</span>The hybrid: a model-based controller tuned by RL</h2>
+    <p>
+      The second answer leaves the motion to a model-based controller. PBVS (position-based visual servoing) computes
+      the gripper velocity that closes the pose error, and WDLS (weighted damped least squares) uses the robot's
+      kinematic model, its Jacobian, to turn that velocity into base and joint speeds. The weights decide how
+      the work is shared between the base and each joint, and that is the only thing the policy learns.
+    </p>
+    <p class="credit">
+      <b>Credit:</b> the PBVS + WDLS controller was provided by the CIAD lab; it was developed by another intern, not by me.
+      My part was porting it into Unity and training the policy that tunes its weights.
+    </p>
     <ul>
-      <li>Ported the lab's PBVS + WDLS controller, originally C++ / ROS, into Unity (C#, Math.NET Numerics).</li>
-      <li>The policy outputs the eight WDLS weights; the analytic solve turns them into joint and base velocities.</li>
+      <li>Ported the controller from C++ / ROS into Unity (C#, Math.NET Numerics), so it runs inside the training loop.</li>
+      <li>The policy outputs the eight WDLS weights; the model-based solve turns them into joint and base velocities.</li>
       <li>A curriculum progressively widened the range of weights the policy was allowed to use.</li>
     </ul>
+    <figure class="multi">
+      <video src="../assets/video/wbc_hybrid.mp4" poster="../assets/img/case/wbc_hybrid_poster.jpg" muted loop playsinline preload="metadata" data-auto aria-label="The hybrid controller moving base and arm to the target"></video>
+      <figcaption>The hybrid: a smooth, direct approach to the target, shown at 2× speed. Same three synchronised cameras: side, gripper close-up, top view.</figcaption>
+    </figure>
     <div class="callout">
-      Keeping the analytic controller in the loop means the motion still comes from a solve with known
+      Keeping the model-based controller in the loop means the motion still comes from a solve with known
       properties. The policy only shapes how the work is shared between base and arm.
     </div>
   </section>
 
   <section class="case-sec" id="results">
-    <h2><span class="sec-id">05</span>Results</h2>
+    <h2><span class="sec-id">07</span>Results</h2>
     <p>
       Protocol: 3 targets 2 m away (on-axis, arc −20°, arc +20°), 5 passes each, deterministic policy,
       gate <code>d &lt; 2 cm</code> and <code>φ &lt; 1.15°</code>. Both controllers passed every run.
@@ -153,7 +202,7 @@
   </section>
 
   <section class="case-sec" id="lessons">
-    <h2><span class="sec-id">06</span>What I learned</h2>
+    <h2><span class="sec-id">08</span>What I learned</h2>
     <ul>
       <li><b>Silent errors are the expensive ones.</b> A value set in the Unity Inspector overrides the C# default and is frozen into the headless build, so a run can train old code without any error. My launchers check that the build is newer than the sources.</li>
       <li><b>Mathematics first.</b> Writing an operation mathematically (quaternions, frame changes) before looking for the Unity function, or implementing it when none existed.</li>
@@ -162,7 +211,7 @@
   </section>
 
   <section class="case-sec" id="next">
-    <h2><span class="sec-id">07</span>Next steps</h2>
+    <h2><span class="sec-id">09</span>Next steps</h2>
     <ul>
       <li>Imitation learning from the analytic solve (behaviour cloning, then a short PPO fine-tune).</li>
       <li>A wider weight range, since the learned weights all stay low, which is what makes the hybrid slow.</li>

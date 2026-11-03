@@ -44,6 +44,24 @@
   lb.addEventListener('click', close);
   addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 
+  /* videos marked data-auto: play while on screen, click to pause / resume */
+  const autos = $$('video[data-auto]');
+  if (autos.length && 'IntersectionObserver' in window) {
+    const vio = new IntersectionObserver((es) => es.forEach((e) => {
+      const v = e.target;
+      if (e.isIntersecting && !v.dataset.paused && !reduce) v.play().catch(() => {});
+      else v.pause();
+    }), { threshold: 0.5 });
+    autos.forEach((v) => {
+      vio.observe(v);
+      v.addEventListener('click', () => {
+        if (v.paused) { delete v.dataset.paused; v.play().catch(() => {}); }
+        else { v.dataset.paused = '1'; v.pause(); }
+      });
+    });
+  }
+  if (reduce) autos.forEach((v) => (v.controls = true));
+
   /* contents: highlight the section on screen */
   const tocLinks = $$('.toc a');
   const secs = tocLinks.map((a) => $(a.getAttribute('href')));

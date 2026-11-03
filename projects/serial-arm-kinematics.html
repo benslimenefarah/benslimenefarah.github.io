@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Serial Arm Kinematics — Farah Ben Slimene</title>
-  <meta name="description" content="Forward kinematics, Jacobians, numerical and heuristic inverse kinematics, and joint-space control for several industrial arms, in Octave.">
+  <meta name="description" content="Forward kinematics, Jacobians, numerical and heuristic inverse kinematics, and joint-space and Cartesian control for several industrial arms, in Octave.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
     <a href="../index.html#work">Projects</a>
     <a href="../index.html#contact">Contact</a>
   </nav>
-  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+  <span class="cv-split bar-pick"><span class="cv-lab">CV</span><a href="../assets/BEN_SLIMENE_Farah_CV_EN.pdf" target="_blank" rel="noopener" aria-label="CV in English (PDF)">EN</a><a href="../assets/BEN_SLIMENE_Farah_CV_FR.pdf" target="_blank" rel="noopener" aria-label="CV en français (PDF)">FR</a></span>
 </header>
 
 <main class="wrap case" id="top">
@@ -34,15 +34,15 @@
   <p class="kicker"><span>Coursework</span><span class="badge sim">SIMULATION</span></p>
   <h1 class="case-title">Kinematics of serial arms</h1>
   <p class="case-lead">
-    A semester of advanced robotics homework, each one a working Octave implementation: from velocity kinematics
-    to three different ways of solving inverse kinematics, then joint-space control.
+    A semester of advanced robotics homework, each one a working Octave implementation: from forward kinematics with
+    dual quaternions and velocity kinematics to three different ways of solving inverse kinematics, then joint-space and Cartesian pose control on SE(3).
   </p>
 
   <dl class="facts">
     <div><dt>Context</dt><dd>Advanced Robotics (S8) homework + lab</dd></div>
     <div><dt>Dates</dt><dd>Jan – Mar 2026</dd></div>
-    <div><dt>Work</dt><dd>In a pair</dd></div>
-    <div><dt>Robots</dt><dd>Franka · UR3e · UR10 · KUKA LWR4 · Adept Viper</dd></div>
+    <div><dt>Work</dt><dd>Individual</dd></div>
+    <div><dt>Robots</dt><dd>RAFA-X1 · Franka · UR3e · UR10 · KUKA LWR4 · Adept Viper</dd></div>
   </dl>
 
   <div class="case-hero">
@@ -51,7 +51,7 @@
 
   <div class="case-body">
   <nav class="toc" aria-label="On this page">
-    <a href="#velocity">01 velocity</a><a href="#numerical">02 numerical IK</a><a href="#fabrik">03 FABRIK</a><a href="#control">04 joint control</a>
+    <a href="#position">01 position FK</a><a href="#velocity">02 velocity</a><a href="#numerical">03 numerical IK</a><a href="#fabrik">04 FABRIK</a><a href="#control">05 joint control</a><a href="#cartesian">06 Cartesian control</a>
   </nav>
   <div class="case-main">
 
@@ -65,13 +65,31 @@
     <div class="step"><b>control</b><span>drive the joints to a setpoint</span></div>
   </div>
 
+  <section class="case-sec" id="position">
+    <h2><span class="sec-id">01</span>Forward kinematics with dual quaternions</h2>
+    <p>
+      For the 7-DOF RAFA-X1, each revolute joint is a unit dual quaternion built from its axis <code>u</code> and a point
+      <code>q</code> on it, and the forward kinematics is their product of exponentials:
+    </p>
+    <div class="callout"><code>X(θ) = X₁(θ₁) X₂(θ₂) … X₇(θ₇) X₀</code>, with <code>Xᵢ = (cos θᵢ/2, sin θᵢ/2 · u) + ε (0, sin θᵢ/2 · (q × u))</code></div>
+    <ul>
+      <li>Rotation and translation travel together in 8 numbers, and composing poses is a single product, with no 4×4 matrices.</li>
+      <li>Each point of the arm is moved by the joints before it, and its position is read back as <code>t = 2 q_D q_R*</code>.</li>
+      <li>Checked in Octave against the 4×4 matrix exponentials: the joint positions agree to 10⁻¹¹ mm on random poses.</li>
+    </ul>
+    <figure class="case-hero" style="padding:10px">
+      <video src="../assets/video/rafa_dq_fk.mp4" poster="../assets/img/case/rafa_dq_poster.jpg" controls muted playsinline preload="metadata"></video>
+      <figcaption>The RAFA-X1 following a sinusoidal joint trajectory, with the end-effector path in red.</figcaption>
+    </figure>
+  </section>
+
   <section class="case-sec" id="velocity">
-    <h2><span class="sec-id">01</span>Forward velocity kinematics</h2>
+    <h2><span class="sec-id">02</span>Forward velocity kinematics</h2>
     <p>Jacobians and velocity kinematics for the Franka and RAFA-X1 arms: how joint speeds map to the end-effector's linear and angular velocity.</p>
   </section>
 
   <section class="case-sec" id="numerical">
-    <h2><span class="sec-id">02</span>Numerical inverse kinematics</h2>
+    <h2><span class="sec-id">03</span>Numerical inverse kinematics</h2>
     <ul>
       <li><b>Franka (7 DOF):</b> the pose error is turned into a twist with the matrix logarithm, <code>ξ = vee(log(H⁻¹ H_d))</code>, then the joints are updated with a damped pseudo-inverse of the Jacobian until <code>‖ξ‖ &lt; ε</code>.</li>
       <li><b>UR10 and KUKA LWR4:</b> IK posed as non-linear least squares on a 6-D position + orientation error and solved with <code>fsolve</code>; reusing the previous solution as the initial guess keeps motion continuous along a trajectory.</li>
@@ -80,17 +98,17 @@
   </section>
 
   <section class="case-sec" id="fabrik">
-    <h2><span class="sec-id">03</span>Heuristic IK: FABRIK</h2>
+    <h2><span class="sec-id">04</span>Heuristic IK: FABRIK</h2>
     <p>
       Forward And Backward Reaching IK on a 3D chain of six unit links. Instead of Jacobians, each pass is geometric:
       a forward pass pulls the tip onto the target, a backward pass puts the base back at the origin, and the two are
-      repeated until the tip is close enough. We used it to reach a fixed target and to track one moving on a circle
+      repeated until the tip is close enough. I used it to reach a fixed target and to track one moving on a circle
       (the video above).
     </p>
   </section>
 
   <section class="case-sec" id="control">
-    <h2><span class="sec-id">04</span>Joint-space control</h2>
+    <h2><span class="sec-id">05</span>Joint-space control</h2>
     <p>
       Proportional setpoint regulation, <code>θ̇ = K_p (θ_d − θ)</code>, giving an exponentially decreasing error.
       Implemented and animated for a planar 2-DOF arm and for the Adept Viper.
@@ -100,12 +118,40 @@
       <figcaption>Adept Viper converging to its joint setpoint.</figcaption>
     </figure>
   </section>
+
+  <section class="case-sec" id="cartesian">
+    <h2><span class="sec-id">06</span>Cartesian pose control on SE(3)</h2>
+    <p>
+      The Adept Viper s650 (6 DOF, DH model) is driven to a full target pose <code>H_d</code>, position and orientation,
+      instead of target joint angles. The pose error is a rigid transform; the matrix logarithm turns it into a twist
+      that the Jacobian can map back to the joints.
+    </p>
+    <div class="flow">
+      <div class="step"><b>pose error</b><span><code>H_e = H_d H⁻¹</code> in SE(3)</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>log map</b><span><code>ξ = log(H_e)^∨ = (ω, v)</code></span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>damped inverse</b><span><code>θ̇ = λ Jᵀ(JJᵀ + μI)⁻¹ ξ</code></span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>integrate</b><span><code>θ ← θ + θ̇ Δt</code> until <code>‖ξ‖ &lt; ε</code></span></div>
+    </div>
+    <ul>
+      <li><b>Closed-form logarithm:</b> the angle comes from <code>cos φ = (tr R − 1)/2</code>, ω from <code>(R − Rᵀ)</code>, and <code>v = A⁻¹(φ) p</code>. The cases φ ≈ 0 and φ ≈ π are handled separately so the twist stays defined.</li>
+      <li><b>Spatial Jacobian:</b> each column is <code>[z_{i−1}; z_{i−1} × (p_e − p_{i−1})]</code>, ordered (ω, v) to match the twist.</li>
+      <li><b>Robustness:</b> damping μ = 0.01 bounds the joint speeds near singularities, and the speeds are clamped to ±2 rad/s like real actuator limits.</li>
+    </ul>
+    <div class="callout">Run in Octave 10.3: from a target up to 20° away on each joint, it converges in 1708 steps (8.5 s at Δt = 5 ms, λ = 1, ε = 10⁻³) and stops 1.0 mm and 0.003° from the target pose.</div>
+    <figure class="case-hero" style="padding:10px">
+      <video src="../assets/video/viper_cartesian_control.mp4" poster="../assets/img/case/viper_cartesian_poster.jpg" controls muted playsinline preload="metadata"></video>
+      <figcaption>The end-effector reaching the target frame, and the twist error ‖ξ‖ falling below ε (log scale).</figcaption>
+    </figure>
+  </section>
   </div>
   </div>
 
   <div class="pager">
     <a href="kuka-pose-control.html"><small>← previous</small>Pose control of a KUKA LWR4</a>
-    <a class="next" href="fourbar-adams.html"><small>next →</small>Four-bar linkage in MSC Adams</a>
+    <a class="next" href="rigid-motion-geometry.html"><small>next →</small>Geometry of rigid motion</a>
   </div>
 </main>
 

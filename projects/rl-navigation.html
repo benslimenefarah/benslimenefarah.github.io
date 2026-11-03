@@ -26,7 +26,7 @@
     <a href="../index.html#work">Projects</a>
     <a href="../index.html#contact">Contact</a>
   </nav>
-  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+  <span class="cv-split bar-pick"><span class="cv-lab">CV</span><a href="../assets/BEN_SLIMENE_Farah_CV_EN.pdf" target="_blank" rel="noopener" aria-label="CV in English (PDF)">EN</a><a href="../assets/BEN_SLIMENE_Farah_CV_FR.pdf" target="_blank" rel="noopener" aria-label="CV en français (PDF)">FR</a></span>
 </header>
 
 <main class="wrap case" id="top">
@@ -46,7 +46,7 @@
   </dl>
 
   <div class="case-hero">
-    <video src="../assets/video/rl_navigation.mp4" poster="../assets/img/rl_poster.jpg" controls muted playsinline preload="metadata"></video>
+    <video src="../assets/video/rl_curriculum.mp4" poster="../assets/img/case/rl_curriculum_poster.jpg" aria-label="Curriculum-learning DQN in Gazebo: stage 1 in the empty arena, then stage 2 with obstacles" controls muted playsinline preload="metadata"></video>
   </div>
 
   <div class="case-body">
@@ -119,6 +119,7 @@
         </tbody>
       </table>
     </div>
+    <figure><img src="../assets/img/case/rl_eval_50ep.png" alt="Evaluation of the curriculum DQN over 50 test episodes: score per episode, score distribution and summary with a 60% success rate" loading="lazy"><figcaption>Curriculum DQN evaluated on 50 test episodes: 60% of goals reached.</figcaption></figure>
     <p>
       <b>Takeaway:</b> the same DQN algorithm went from under 20% to 60% success just by changing how it was trained.
       Without ever reaching a goal early on, the direct DQN learned almost only from crashes. Actor-Critic stayed best

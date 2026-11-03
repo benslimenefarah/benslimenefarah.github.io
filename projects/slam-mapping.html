@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SLAM Mapping — Farah Ben Slimene</title>
-  <meta name="description" content="SLAM with LiDAR and odometry using SLAM Toolbox, path planning with Nav2 Behavior Trees, and a comparison of 2D and 3D maps.">
+  <title>SLAM and Navigation — Farah Ben Slimene</title>
+  <meta name="description" content="A differential-drive robot in Gazebo that maps a custom maze with slam_toolbox, localises with AMCL and navigates autonomously with Nav2.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -26,44 +26,92 @@
     <a href="../index.html#work">Projects</a>
     <a href="../index.html#contact">Contact</a>
   </nav>
-  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+  <span class="cv-split bar-pick"><span class="cv-lab">CV</span><a href="../assets/BEN_SLIMENE_Farah_CV_EN.pdf" target="_blank" rel="noopener" aria-label="CV in English (PDF)">EN</a><a href="../assets/BEN_SLIMENE_Farah_CV_FR.pdf" target="_blank" rel="noopener" aria-label="CV en français (PDF)">FR</a></span>
 </header>
 
 <main class="wrap case" id="top">
   <a class="crumb" href="../index.html#work">← All projects</a>
-  <p class="kicker"><span>Project</span><span class="badge hw">LIDAR</span></p>
-  <h1 class="case-title">SLAM and robust mapping</h1>
+  <p class="kicker"><span>Project</span><span class="badge sim">SIMULATION</span></p>
+  <h1 class="case-title">Autonomous mobile robot: SLAM and navigation</h1>
   <p class="case-lead">
-    Building maps of an environment while localising the robot in it, then planning paths in those maps,
-    across different robot platforms.
+    A differential-drive robot in Gazebo that maps an unknown maze with SLAM, localises itself on the saved map
+    with AMCL, then drives on its own to goal poses with Nav2.
   </p>
 
   <dl class="facts">
-    <div><dt>Context</dt><dd>Academic project</dd></div>
-    <div><dt>Year</dt><dd>2024 – 2025</dd></div>
-    <div><dt>Sensors</dt><dd>3D LiDAR · odometry</dd></div>
-    <div><dt>Stack</dt><dd>ROS 2 · SLAM Toolbox · Nav2</dd></div>
+    <div><dt>Context</dt><dd>Academic project (PFR)</dd></div>
+    <div><dt>Date</dt><dd>December 2025</dd></div>
+    <div><dt>Sensors</dt><dd>360° 2D LiDAR · camera · wheel odometry</dd></div>
+    <div><dt>Stack</dt><dd>ROS 2 Humble · Gazebo · slam_toolbox · Nav2</dd></div>
   </dl>
 
-  <div class="flow">
-    <div class="step"><b>sense</b><span>LiDAR scans + wheel odometry</span></div>
-    <div class="arrow">→</div>
-    <div class="step"><b>SLAM Toolbox</b><span>fuse them into a map and a pose</span></div>
-    <div class="arrow">→</div>
-    <div class="step"><b>Nav2</b><span>plan paths, driven by Behavior Trees</span></div>
+  <div class="case-hero">
+    <video src="../assets/video/slam_nav2.mp4" poster="../assets/img/case/slam_nav2_poster.jpg" controls muted playsinline preload="metadata" aria-label="Nav2 in RViz: a goal is set, a path is planned and the robot follows it"></video>
   </div>
 
-  <section class="case-sec" id="work">
-    <h2><span class="sec-id">01</span>What I did</h2>
+  <div class="case-body">
+  <nav class="toc" aria-label="On this page">
+    <a href="#robot">01 robot</a><a href="#world">02 world</a><a href="#mapping">03 mapping</a>
+    <a href="#nav">04 navigation</a><a href="#stack">05 ROS graph</a>
+  </nav>
+  <div class="case-main">
+
+  <section class="case-sec" id="robot">
+    <h2><span class="sec-id">01</span>The robot</h2>
     <ul>
-      <li>Ran SLAM by fusing LiDAR and odometry data with SLAM Toolbox.</li>
-      <li>Configured Behavior Trees in Nav2 for path planning.</li>
-      <li>Compared the 2D and 3D maps built for different robot platforms.</li>
+      <li>URDF/xacro model: a 0.335 × 0.265 × 0.138 m chassis, two drive wheels (r = 0.033 m) and a caster.</li>
+      <li>I added a 360° LiDAR, a camera and a face (eyes and smile).</li>
+      <li><code>ros2_control</code> with a diff-drive controller; <code>twist_mux</code> arbitrates between teleop and Nav2 velocity commands.</li>
     </ul>
-    <div class="callout">
-      This page is a starting point. Add your maps, a screenshot of RViz and the Behavior Tree you used here.
+    <div class="two-col">
+      <figure><img src="../assets/img/case/slam_robot.jpg" alt="Orange box-shaped robot with a smiling face and a LiDAR on top, in Gazebo" loading="lazy"><figcaption>The robot in Gazebo.</figcaption></figure>
+      <figure><img src="../assets/img/case/slam_tf_tree.png" alt="TF tree from map to odom to base_link to the wheels, LiDAR and camera frames" loading="lazy"><figcaption>TF tree: map → odom → base_link → sensors.</figcaption></figure>
     </div>
   </section>
+
+  <section class="case-sec" id="world">
+    <h2><span class="sec-id">02</span>A custom maze</h2>
+    <p>I designed the world myself: an ~18 × 18 m maze split into rooms by walls, with box and cylinder obstacles. Gazebo is bridged to ROS 2 with <code>ros_gz_bridge</code>.</p>
+    <div class="two-col">
+      <figure><img src="../assets/img/case/slam_world.jpg" alt="Maze world in Gazebo with walls, boxes and cylinders" loading="lazy"><figcaption>The maze world.</figcaption></figure>
+      <figure><img src="../assets/img/case/slam_lidar.jpg" alt="Blue LiDAR rays from the robot hitting the maze walls and obstacles" loading="lazy"><figcaption>LiDAR scan (/scan) in simulation.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="case-sec" id="mapping">
+    <h2><span class="sec-id">03</span>SLAM mapping</h2>
+    <div class="flow">
+      <div class="step"><b>sense</b><span>LiDAR scans + wheel odometry</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>slam_toolbox</b><span>online async, 0.05 m resolution</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>map</b><span>saved as .pgm/.yaml + pose graph</span></div>
+    </div>
+    <p>I tuned the slam_toolbox parameters, drove the robot through every room with keyboard teleop, and saved the map and the serialised pose graph.</p>
+    <div class="two-col">
+      <figure><img src="../assets/img/case/slam_mapping.jpg" alt="Partially built occupancy map in RViz while the robot explores" loading="lazy"><figcaption>Map being built live in RViz.</figcaption></figure>
+      <figure><img src="../assets/img/case/slam_map.png" alt="Final occupancy grid map of the maze" loading="lazy"><figcaption>Final saved map.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="case-sec" id="nav">
+    <h2><span class="sec-id">04</span>Localisation and autonomous navigation</h2>
+    <ul>
+      <li><b>Localisation:</b> AMCL on the saved map, initial pose set in RViz, then checked that the robot stays localised while driving.</li>
+      <li><b>Navigation:</b> Nav2 (planner, controller, behavior server, BT navigator) with global and local costmaps. A goal set with <i>2D Goal Pose</i> gives a collision-free path that the robot follows.</li>
+    </ul>
+    <div class="two-col">
+      <figure><img src="../assets/img/case/slam_costmap.jpg" alt="Nav2 global costmap with inflated walls and obstacles" loading="lazy"><figcaption>Global costmap with inflation.</figcaption></figure>
+      <figure><img src="../assets/img/case/slam_nav2_path.jpg" alt="Planned path from the robot to the goal through the maze" loading="lazy"><figcaption>Planned path to a 2D Goal Pose.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="case-sec" id="stack">
+    <h2><span class="sec-id">05</span>ROS graph</h2>
+    <figure><img src="../assets/img/case/slam_rqt.jpg" alt="rqt_graph showing ros_gz_bridge, slam_toolbox, bt_navigator and the tf, odom, map and scan topics" loading="lazy"><figcaption>rqt_graph: Gazebo bridges, slam_toolbox and Nav2.</figcaption></figure>
+  </section>
+  </div>
+  </div>
 
   <div class="pager">
     <a href="ar-chess.html"><small>← previous</small>Augmented reality chess</a>

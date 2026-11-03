@@ -55,6 +55,7 @@
 .case-sec figure { margin: 28px 0; }
 .case-sec figure img, .case-sec figure video { width: 100%; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
 .case-sec figure video { background: #05080b; }
+.case-sec figure video[data-auto] { cursor: pointer; }
 .case-sec figure img, .case-hero img { cursor: zoom-in; transition: transform .5s var(--ease), border-color .3s; }
 .case-sec figure img:hover { border-color: var(--line-2); transform: translateY(-3px); }
 figcaption { margin-top: 10px; font: 12.5px/1.5 var(--mono); color: var(--dim); }
@@ -125,3 +126,9 @@ figcaption { margin-top: 10px; font: 12.5px/1.5 var(--mono); color: var(--dim); 
   .case-hero { border-radius: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; } }
+.case-sec p.credit { padding: 12px 16px; border: 1px dashed var(--line-2); border-radius: 10px; font-size: 14.5px; color: var(--muted); }
+
+/* three synchronised cameras in one video: let it run wider than the text */
+@media (min-width: 1000px) { .case-sec figure.multi { margin-right: -60px; } }
+.fact-link { border-bottom: 1px solid var(--line-2); transition: border-color .2s; }
+.fact-link:hover { border-color: var(--text); }

@@ -60,7 +60,8 @@
     const img = new Image(); img.alt = ''; img.width = 22; img.height = 22; img.loading = 'lazy';
     if (s.hasAttribute('data-inv')) img.className = 'inv';
     img.onerror = () => img.remove();
-    img.src = `https://cdn.jsdelivr.net/npm/devicon@2.16.0/icons/${s.dataset.i}.svg`;
+    const i = s.dataset.i; /* local logos have a file extension, the rest come from devicon */
+    img.src = /\.(png|svg)$/.test(i) ? `assets/img/logos/${i}` : `https://cdn.jsdelivr.net/npm/devicon@2.16.0/icons/${i}.svg`;
     s.prepend(img);
   });
 
@@ -72,8 +73,10 @@
     items.forEach((it) => {
       const show = f === 'all' || it.dataset.tags.split(' ').includes(f);
       it.classList.toggle('hide', !show);
+
       if (show && !reduce) { it.animate([{ opacity: 0, transform: 'translateY(20px)' }, { opacity: 1, transform: 'none' }], { duration: 600, easing: 'cubic-bezier(.2,.8,.2,1)' }); }
     });
+    const wh = $('.wip-head'); if (wh) wh.classList.toggle('hide', !$$('.wip').some((w) => !w.classList.contains('hide')));
   }));
 
   /* ---------- work: screens follow the cursor, videos play on hover, "View project" pill ---------- */
@@ -81,7 +84,7 @@
   let px = 0, py = 0, tx = 0, ty = 0;
   items.forEach((it) => {
     const v = $('video', it), stage = $('.stage', it);
-    stage.addEventListener('pointerenter', () => { if (fine) pill.classList.add('on'); if (v) { v.preload = 'auto'; v.play().catch(() => {}); } });
+    stage.addEventListener('pointerenter', () => { if (fine && !it.classList.contains('wip')) pill.classList.add('on'); if (v) { v.preload = 'auto'; v.play().catch(() => {}); } });
     stage.addEventListener('pointerleave', () => { pill.classList.remove('on'); if (v) v.pause(); });
   });
   addEventListener('pointermove', (e) => { tx = e.clientX; ty = e.clientY; }, { passive: true });

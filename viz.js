@@ -428,6 +428,112 @@
         label(ctx, 'DOF = 3(4−1) − 2·4 = 1', 12, h - 12, C.muted);
       };
     },
+
+    /* --- rigid-motion geometry: line A turns about line B, point Q turns about the moving A (Plücker / Rodrigues) --- */
+    plucker(st) {
+      const s = { az: .7, el: .35, trail: [] };
+      // Rodrigues rotation of vector v about unit axis u by angle a
+      const rot = (u, a, v) => {
+        const c = Math.cos(a), sn = Math.sin(a), d = u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+        const cx = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+        return [0, 1, 2].map((i) => v[i] * c + cx[i] * sn + u[i] * d * (1 - c));
+      };
+      return (ctx) => {
+        const { w, h } = st, S = Math.min(w, h) * .2;
+        const wantAz = st.m ? (st.m.x / w - .5) * 3 : .7 + Math.sin(st.t * .15) * .5;
+        const wantEl = st.m ? clamp((st.m.y / h - .5) * 1.4 + .3, -.2, 1.1) : .35;
+        s.az = lerp(s.az, wantAz, .08); s.el = lerp(s.el, wantEl, .08);
+        const ca = Math.cos(s.az), sa = Math.sin(s.az), ce = Math.cos(s.el), se = Math.sin(s.el);
+        const P = ([x, y, z]) => { const xr = x * ca - y * sa, yr = x * sa + y * ca; return [w * .5 + xr * S, h * .55 - (z * ce - yr * se) * S]; };
+        const th = st.t * .5;                              // angle of A about B
+        const pA = rot([0, 0, 1], th, [0, 1, 0]), uA = rot([0, 0, 1], th, [1, 0, 0]);
+        const Q = pA.map((v, i) => v + rot(uA, 2 * th, [0, 0, .5])[i]);  // Q turns twice as fast about A
+        s.trail.push(Q); if (s.trail.length > 260) s.trail.shift();
+        ctx.fillStyle = C.bg; ctx.fillRect(0, 0, w, h); grid(ctx, w, h, 20);
+        // ground grid in perspective-free projection
+        ctx.strokeStyle = 'rgba(120,160,200,.12)'; ctx.lineWidth = 1;
+        for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.moveTo(...P([k, -2, -1.4])); ctx.lineTo(...P([k, 2, -1.4])); ctx.moveTo(...P([-2, k, -1.4])); ctx.lineTo(...P([2, k, -1.4])); ctx.stroke(); }
+        const seg = (a, b, col, wd) => { ctx.strokeStyle = col; ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(...P(a)); ctx.lineTo(...P(b)); ctx.stroke(); };
+        ctx.lineCap = 'round';
+        seg([0, 0, -1.6], [0, 0, 1.7], C.z, 3);            // line B
+        label(ctx, 'B', ...P([.08, 0, 1.75]), C.z);
+        // trace of Q
+        ctx.strokeStyle = 'rgba(255,159,67,.75)'; ctx.lineWidth = 1.5; ctx.beginPath();
+        s.trail.forEach((p, i) => (i ? ctx.lineTo(...P(p)) : ctx.moveTo(...P(p)))); ctx.stroke();
+        // line A
+        seg(pA.map((v, i) => v - 1.3 * uA[i]), pA.map((v, i) => v + 1.3 * uA[i]), C.x, 3);
+        label(ctx, 'A', ...P(pA.map((v, i) => v + 1.4 * uA[i])), C.x);
+        // closest point of A to B and the moment
+        ctx.setLineDash([3, 4]); seg([0, 0, 0], pA, C.dim, 1.2); ctx.setLineDash([]);
+        ctx.fillStyle = C.orange; ctx.beginPath(); ctx.arc(...P(Q), 5, 0, TAU); ctx.fill();
+        label(ctx, 'L = (u, m),  m = p × u', 12, 20, C.text);
+        label(ctx, 'R = I + sinθ[u]ₓ + (1−cosθ)[u]ₓ²', 12, h - 12, C.muted);
+        label(ctx, `θ ${((th % TAU) * 57.3).toFixed(0)}°`, w - 12, 20, C.teal, 'right');
+      };
+    },
+
+    /* --- RANSAC: 2-point samples, consensus band, adaptive N, total least-squares refit --- */
+    ransac(st) {
+      const s = {};
+      const reset = () => {
+        const a = rnd(-.5, .5), n = [-Math.sin(a), Math.cos(a)], pts = [];
+        for (let i = 0; i < 16; i++) { const x = -1 + (2 * i) / 15; pts.push({ x: x * Math.cos(a) + rnd(-.04, .04), y: x * Math.sin(a) + rnd(-.04, .04), out: false }); }
+        for (let i = 0; i < 4; i++) { const x = rnd(-1, 1), off = (Math.random() < .5 ? -1 : 1) * rnd(.3, .7); pts.push({ x: x * Math.cos(a) + n[0] * off, y: x * Math.sin(a) + n[1] * off, out: true }); }
+        Object.assign(s, { pts, k: 0, N: 17, eps: .5, best: [], cand: null, final: null, clock: 0, hold: 0 });
+      };
+      reset();
+      const lineOf = (p, q) => { let a = p.y - q.y, b = q.x - p.x; const nn = Math.hypot(a, b) || 1; a /= nn; b /= nn; return [a, b, -(a * p.x + b * p.y)]; };
+      const t = .1;
+      const tls = (set) => {
+        const mx = set.reduce((v, p) => v + p.x, 0) / set.length, my = set.reduce((v, p) => v + p.y, 0) / set.length;
+        let sxx = 0, syy = 0, sxy = 0; for (const p of set) { sxx += (p.x - mx) ** 2; syy += (p.y - my) ** 2; sxy += (p.x - mx) * (p.y - my); }
+        const ang = .5 * Math.atan2(2 * sxy, sxx - syy), a = -Math.sin(ang), b = Math.cos(ang);  // normal = smallest-variance direction
+        return [a, b, -(a * mx + b * my)];
+      };
+      return (ctx) => {
+        const { w, h } = st, S = Math.min(w / 2.6, h / 2.2), ox = w * .5, oy = h * .54;
+        const X = (p) => [ox + p.x * S, oy - p.y * S];
+        const cur = st.m ? Object.assign(s.cur || (s.cur = { out: true, cursor: true }), { x: (st.m.x - ox) / S, y: -(st.m.y - oy) / S }) : null;
+        const all = cur ? s.pts.concat([cur]) : s.pts;
+        s.clock += .016;
+        if (s.final) { s.hold += .016; if (s.hold > 2.2) reset(); }
+        else if (s.clock > .45) {
+          s.clock = 0; s.k++;
+          let i = Math.floor(Math.random() * all.length), j; do { j = Math.floor(Math.random() * all.length); } while (j === i);
+          const L = lineOf(all[i], all[j]), cons = all.filter((p) => Math.abs(L[0] * p.x + L[1] * p.y + L[2]) < t);
+          s.cand = { L, pair: [all[i], all[j]], cons };
+          if (cons.length > s.best.length) { s.best = cons; const e = 1 - cons.length / all.length; if (e < s.eps) { s.eps = e; s.N = e <= 0 ? 0 : Math.ceil(Math.log(.01) / Math.log(1 - (1 - e) ** 2)); } }
+          if (s.k >= s.N) s.final = tls(s.best);
+        }
+        ctx.fillStyle = C.bg; ctx.fillRect(0, 0, w, h); grid(ctx, w, h, 20);
+        const drawLine = (L, col, wd, band) => {
+          const [a, b, c] = L, ends = [];
+          // intersect with a large box
+          for (const x of [-3, 3]) if (Math.abs(b) > 1e-6) ends.push({ x, y: -(a * x + c) / b });
+          if (ends.length < 2) { ends.length = 0; for (const y of [-3, 3]) ends.push({ x: -(b * y + c) / a, y }); }
+          if (band) {
+            ctx.fillStyle = 'rgba(46,230,197,.08)'; ctx.beginPath();
+            const off = [a * t, b * t];
+            ctx.moveTo(...X({ x: ends[0].x + off[0], y: ends[0].y + off[1] })); ctx.lineTo(...X({ x: ends[1].x + off[0], y: ends[1].y + off[1] }));
+            ctx.lineTo(...X({ x: ends[1].x - off[0], y: ends[1].y - off[1] })); ctx.lineTo(...X({ x: ends[0].x - off[0], y: ends[0].y - off[1] })); ctx.closePath(); ctx.fill();
+          }
+          ctx.strokeStyle = col; ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(...X(ends[0])); ctx.lineTo(...X(ends[1])); ctx.stroke();
+        };
+        if (s.final) drawLine(s.final, C.teal, 2.5, true);
+        else if (s.cand) drawLine(s.cand.L, 'rgba(230,237,243,.55)', 1.2, true);
+        const inSet = s.final ? s.best : s.cand ? s.cand.cons : [];
+        for (const p of all) {
+          const [x, y] = X(p), isIn = inSet.includes(p);
+          ctx.fillStyle = isIn ? C.y : p.out ? C.x : C.muted;
+          ctx.beginPath(); ctx.arc(x, y, p.cursor ? 5.5 : 3.6, 0, TAU); ctx.fill();
+          if (p.cursor) { ctx.strokeStyle = C.x; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x, y, 10, 0, TAU); ctx.stroke(); }
+        }
+        if (s.cand && !s.final) for (const p of s.cand.pair) { const [x, y] = X(p); ctx.strokeStyle = C.orange; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 7, 0, TAU); ctx.stroke(); }
+        label(ctx, s.final ? 'TLS refit on best consensus' : `trial ${s.k} / N = ${s.N}`, 12, 20, C.text);
+        label(ctx, `ε = ${s.eps.toFixed(2)}   |S| = ${s.best.length}`, w - 12, 20, C.teal, 'right');
+        label(ctx, 'N = log(1−p) / log(1−(1−ε)²)', 12, h - 12, C.muted);
+      };
+    },
   };
 
   /* ======================= runtime ======================= */

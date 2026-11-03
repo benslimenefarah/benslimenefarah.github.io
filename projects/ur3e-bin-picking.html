@@ -26,7 +26,7 @@
     <a href="../index.html#work">Projects</a>
     <a href="../index.html#contact">Contact</a>
   </nav>
-  <a class="bar-cta" href="../assets/BEN_SLIMENE_Farah_CV.pdf">Résumé <span class="long">PDF </span>↓</a>
+  <span class="cv-split bar-pick"><span class="cv-lab">CV</span><a href="../assets/BEN_SLIMENE_Farah_CV_EN.pdf" target="_blank" rel="noopener" aria-label="CV in English (PDF)">EN</a><a href="../assets/BEN_SLIMENE_Farah_CV_FR.pdf" target="_blank" rel="noopener" aria-label="CV en français (PDF)">FR</a></span>
 </header>
 
 <main class="wrap case" id="top">
@@ -43,10 +43,11 @@
     <div><dt>Dates</dt><dd>2025 – 2026 (two semesters)</dd></div>
     <div><dt>Team</dt><dd>6 students</dd></div>
     <div><dt>Hardware</dt><dd>UR3e · RealSense D435 (eye-in-hand)</dd></div>
+    <div><dt>Code</dt><dd><a class="fact-link" href="https://github.com/benslimenefarah/ur3e-bin-picking" target="_blank" rel="noopener">GitHub ↗</a></dd></div>
   </dl>
 
   <div class="case-hero">
-    <video src="../assets/video/ur3e_binpicking.mp4" poster="../assets/img/ur3e_poster.jpg" controls muted playsinline preload="metadata"></video>
+    <video src="../assets/video/ur3e_binpicking_hd.mp4" poster="../assets/img/case/ur3e_poster_hd.jpg" controls muted playsinline preload="metadata"></video>
   </div>
 
   <div class="case-body">
@@ -66,6 +67,7 @@
       <div class="arrow">→</div>
       <div class="step"><b>motion</b><span>MoveIt 2 (pymoveit2): 10-step pick-and-place</span></div>
     </div>
+    <figure><img src="../assets/img/case/ur3e_architecture.png" alt="Diagram: RealSense and UR3e drivers, grasp_detector, TF2, the pick-and-place client and MoveIt 2 move_group" loading="lazy"><figcaption>Nodes and topics of the pick-and-place pipeline.</figcaption></figure>
   </section>
 
   <section class="case-sec" id="vision">
@@ -73,12 +75,21 @@
     <ul>
       <li>Bounding boxes include background and are too coarse for millimetre gripping, so we chose <b>instance segmentation</b> with <b>YOLOv11s-seg</b>, two classes: <code>shoe</code> and <code>hole</code>.</li>
       <li>About <b>1,200 images</b> captured in the robot's own workspace and labelled by hand with polygon masks (makesense.ai, then Roboflow).</li>
+      <li>Fine-tuned for 300 epochs with Ultralytics on Kaggle, with a higher classification penalty to keep the classes apart.</li>
     </ul>
+    <div class="two-col">
+      <figure><img src="../assets/img/case/ur3e_hole_mask.jpg" alt="Polygon mask outlining the opening of a shoe" loading="lazy"><figcaption>Hole mask: the part the gripper holds.</figcaption></figure>
+      <figure><img src="../assets/img/case/ur3e_shoe_mask.jpg" alt="Polygon mask outlining a whole shoe" loading="lazy"><figcaption>Shoe mask.</figcaption></figure>
+    </div>
     <div class="callout warn">
       <b>The false-positive problem.</b> The first model looked perfect on paper (mAP near 100%), but in live tests it
       detected a human hand as a shoe, which could make the arm try to grab the operator.
       The fix was in the data: negative backgrounds (empty table, hands, no shoes), explicit classes for the hand and the robot,
       and shoes seen from extreme angles.
+    </div>
+    <div class="two-col">
+      <figure><img src="../assets/img/case/ur3e_training.png" alt="Training curves: mAP close to 100% and losses dropping after about 100 epochs" loading="lazy"><figcaption>First training: near-perfect curves that hid the problem.</figcaption></figure>
+      <figure><img src="../assets/img/case/ur3e_env_classes.jpg" alt="Lab scene with the robot arms and a hand segmented as their own classes" loading="lazy"><figcaption>The fix: the hand and the robot arm get their own classes.</figcaption></figure>
     </div>
   </section>
 
@@ -96,6 +107,7 @@
       <div class="arrow">→</div>
       <div class="step"><b>base_link</b><span>forward kinematics</span></div>
     </div>
+    <figure><img src="../assets/img/case/ur3e_handeye.jpg" alt="ArUco marker detected in the camera image next to the easy_handeye2 calibration window" loading="lazy"><figcaption>ArUco detection and the easy_handeye2 calibrator.</figcaption></figure>
   </section>
 
   <section class="case-sec" id="grasp">
@@ -106,6 +118,7 @@
       <li>Depth = median of a small window, with fallbacks, since one depth pixel is too noisy.</li>
       <li>Pinhole back-projection, then TF2 to <code>base_link</code>; published as <code>/shoe_detector/grasp_point_base</code>.</li>
     </ul>
+    <figure><img src="../assets/img/case/ur3e_grasp_pca.jpg" alt="Shoe opening mask in green with its two principal axes and the grasp centre" loading="lazy"><figcaption>Hole mask with its principal axes and the grasp centre.</figcaption></figure>
   </section>
 
   <section class="case-sec" id="motion">
@@ -117,9 +130,10 @@
       <li>Fixed poses (home, place) recorded in joint space for repeatability; the pick pose is Cartesian, with straight-line descent and retreat.</li>
       <li>Every motion cancels pending goals, reseeds from <code>/joint_states</code> and retries up to 3 times; speed kept at 3% for safety.</li>
     </ul>
+    <figure><img src="../assets/img/case/ur3e_collision_table.jpg" alt="UR3e on its table with coloured collision boxes around it" loading="lazy"><figcaption>The table and the boxes around the UR3e, modelled for the planner.</figcaption></figure>
     <div class="two-col">
-      <figure><img src="../assets/img/case/ur3e_25.jpg" alt="UR3e approaching the shoe"><figcaption>Approach above the grasp point.</figcaption></figure>
-      <figure><img src="../assets/img/case/ur3e_45.jpg" alt="UR3e moving toward the place pose"><figcaption>Moving to the place side.</figcaption></figure>
+      <figure><img src="../assets/img/case/ur3e_approach.jpg" alt="UR3e approaching the shoe on the table" loading="lazy"><figcaption>Approach above the grasp point.</figcaption></figure>
+      <figure><img src="../assets/img/case/ur3e_place.jpg" alt="UR3e at the place position beside the table" loading="lazy"><figcaption>Place position.</figcaption></figure>
     </div>
   </section>
 

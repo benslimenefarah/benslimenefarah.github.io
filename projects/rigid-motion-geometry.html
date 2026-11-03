@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geometry of Rigid Motion — Farah Ben Slimene</title>
+  <meta name="description" content="Homogeneous coordinates, rotations about arbitrary axes, Plücker lines and screw theory, derived by hand and animated in Octave.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../v2.css">
+  <link rel="stylesheet" href="../case.css">
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<canvas id="slam" aria-hidden="true"></canvas>
+<div class="bg-scrim" aria-hidden="true"></div>
+<button class="slam-hud" id="slam-toggle" title="Turn the animated background on or off"><span class="dot"></span><span class="hud-info"><span id="slam-status">slam_toolbox · mapping</span> · <span id="slam-pct">0.0</span>% <span data-i18n>explored</span></span><span class="hud-sw">bg: on</span></button>
+
+<header class="bar">
+  <a class="mark" href="../index.html" aria-label="Home">FB</a>
+  <nav>
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#experience">Experience</a>
+    <a href="../index.html#work">Projects</a>
+    <a href="../index.html#contact">Contact</a>
+  </nav>
+  <span class="cv-split bar-pick"><span class="cv-lab">CV</span><a href="../assets/BEN_SLIMENE_Farah_CV_EN.pdf" target="_blank" rel="noopener" aria-label="CV in English (PDF)">EN</a><a href="../assets/BEN_SLIMENE_Farah_CV_FR.pdf" target="_blank" rel="noopener" aria-label="CV en français (PDF)">FR</a></span>
+</header>
+
+<main class="wrap case" id="top">
+  <a class="crumb" href="../index.html#coursework">← Coursework</a>
+  <p class="kicker"><span>Coursework</span><span class="badge sim">SIMULATION</span></p>
+  <h1 class="case-title">Geometry of rigid motion</h1>
+  <p class="case-lead">
+    The mathematics under every robot model, built up one homework at a time: points and lines in homogeneous
+    coordinates, rotations about arbitrary axes, Plücker lines, and finally screw theory, each derived by hand and
+    animated in Octave.
+  </p>
+
+  <dl class="facts">
+    <div><dt>Context</dt><dd>Basic Robotics (S7) homework</dd></div>
+    <div><dt>Dates</dt><dd>Oct – Dec 2025</dd></div>
+    <div><dt>Work</dt><dd>Individual</dd></div>
+    <div><dt>Tools</dt><dd>Octave · LaTeX</dd></div>
+  </dl>
+
+  <div class="case-hero">
+    <video src="../assets/video/line_about_line.mp4" poster="../assets/img/case/line_about_line_poster.jpg" controls muted playsinline preload="metadata"></video>
+  </div>
+
+  <div class="case-body">
+  <nav class="toc" aria-label="On this page">
+    <a href="#plane">01 2D geometry</a><a href="#chain">02 frame chains</a><a href="#axis">03 any axis</a><a href="#plucker">04 Plücker lines</a><a href="#screw">05 screw theory</a>
+  </nav>
+  <div class="case-main">
+
+  <div class="flow">
+    <div class="step"><b>homogeneous 2D</b><span>points, lines, H</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>3D rotations</b><span>Rodrigues, any axis</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Plücker lines</b><span>lines as 6-vectors</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>screw theory</b><span>twists and exponentials</span></div>
+  </div>
+
+  <section class="case-sec" id="plane">
+    <h2><span class="sec-id">01</span>Points and lines in homogeneous coordinates</h2>
+    <ul>
+      <li>A line is a 3-vector <code>l</code> with <code>lᵀx = 0</code>. Two lines meet at <code>x = l × m</code>, and two points are joined by <code>l = p × q</code>: the same cross product both ways.</li>
+      <li>If points move as <code>x′ = Hx</code>, lines must move as <code>l′ = H⁻ᵀ l</code>, which I proved from the incidence relation <code>x′ᵀl′ = xᵀl = 0</code>.</li>
+      <li>Rotation about a pivot <code>c</code>: translate to the origin, rotate, translate back. Animated for a stick and for a line not through the origin, with linear interpolation of the angle.</li>
+    </ul>
+    <div class="two-col">
+      <figure><img src="../assets/img/case/br_line_intersection.png" alt="Two black lines crossing, their intersection marked in red at (2, 2)"><figcaption>Intersection x = l × m.</figcaption></figure>
+      <figure><img src="../assets/img/case/br_line_join.png" alt="A line drawn through two red points"><figcaption>Join l = p × q.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="case-sec" id="chain">
+    <h2><span class="sec-id">02</span>Chains of frames</h2>
+    <p>
+      The pose of the Franka end-effector G in the base frame A is the head-to-tail product of the transforms between
+      successive joint frames, <code>T_G/A = T_B/A T_C/B T_D/C T_E/D T_F/E T_G/F</code>: the structure that every
+      forward kinematic model later reuses.
+    </p>
+  </section>
+
+  <section class="case-sec" id="axis">
+    <h2><span class="sec-id">03</span>Rotation about any 3D line</h2>
+    <p>For a unit axis <code>û</code> through the origin, Rodrigues' formula gives the rotation in closed form:</p>
+    <div class="callout"><code>R = I + sin θ [û]ₓ + (1 − cos θ) [û]ₓ²</code></div>
+    <p>
+      For a line through a point <code>p₀</code> that misses the origin, the same rotation is conjugated by a translation,
+      giving one homogeneous matrix <code>H = [R, (I − R) p₀; 0, 1]</code>, checked on numeric examples.
+    </p>
+  </section>
+
+  <section class="case-sec" id="plucker">
+    <h2><span class="sec-id">04</span>Plücker lines and nested rotations</h2>
+    <ul>
+      <li>A 3D line becomes a 6-vector <code>L = (u, m)</code> with moment <code>m = p × u</code>. It does not depend on the point chosen on the line, and the point closest to the origin is <code>u × m</code>.</li>
+      <li>Rotation by θ about a Plücker line: <code>H = [R(u, θ), (I − R)(u × m); 0, 1]</code>. Lines themselves move with the 6×6 matrix <code>[R, 0; [t]ₓR, R]</code>.</li>
+      <li>The animation above composes both: line A turns about line B while point Q turns twice as fast about the moving line A, leaving the knot-like trace.</li>
+    </ul>
+  </section>
+
+  <section class="case-sec" id="screw">
+    <h2><span class="sec-id">05</span>Screw theory: a two-link spatial robot</h2>
+    <p>
+      Each revolute joint is a unit twist <code>ξ = (ω, v)</code> with <code>v = q × ω</code> for a point <code>q</code>
+      on its axis. The forward kinematics is a product of matrix exponentials, here for two orthogonal joints (about X, then Z):
+    </p>
+    <div class="callout"><code>H(θ) = exp([ξ₁]θ₁) · exp([ξ₂]θ₂)</code>, with <code>[ξ] = [[ω]ₓ, v; 0, 0]</code></div>
+    <p>This product-of-exponentials form is the one I then used for the industrial arms in <a href="serial-arm-kinematics.html">Kinematics of serial arms</a>.</p>
+  </section>
+  </div>
+  </div>
+
+  <div class="pager">
+    <a href="serial-arm-kinematics.html"><small>← previous</small>Kinematics of serial arms</a>
+    <a class="next" href="ransac-line-fitting.html"><small>next →</small>Robust line fitting with RANSAC</a>
+  </div>
+</main>
+
+<footer class="foot wrap">
+  <span>Farah Ben Slimene · Clermont-Ferrand, France</span>
+  <a href="../index.html#contact">Contact</a>
+  <a href="#top">Back to top ↑</a>
+</footer>
+<script src="../lang.js"></script>
+<script src="../robot-bg.js"></script>
+<script src="../case.js"></script>
+</body>
+</html>
